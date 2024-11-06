@@ -1,0 +1,18 @@
+
+include:
+  # Loading the technical infrastructure
+  - ./../infrastructure/docker-compose.yml
+
+services:
+
+  parking-receiver:
+    container_name: parking-receiver
+    build:
+      context: ../services/parking-receiver
+    ports:
+      - "9080:9080"
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      service-registry:
+        condition: service_healthy

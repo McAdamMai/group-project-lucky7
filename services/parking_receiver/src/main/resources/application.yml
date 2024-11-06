@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: parking-receiver
+
+  rabbitmq:
+    username: admin
+    password: cas735
+
+logging.level:
+  ca.mcmaster.cas735.tmt.parking_receiver:
+    adapter:  INFO # DEBUG for fine-grained trace
+    business: INFO
+
+server:
+  port: 9080
+
+app:
+  custom:
+    mqtt:
+      port: 1883
+      topic: acme_parking
+    messaging:
+      inbound-exchange-topic: parking.filter
+      outbound-exchange-topic: transponder
+
+management:
+  info:
+    env:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: info,health
+      base-path: /actuator
+
+info:
+  application:
+    description: '@project.description@'
+    version:     '@project.version@'
+
+eureka:
+  client:
+    healthcheck:
+      enabled: true
+  
