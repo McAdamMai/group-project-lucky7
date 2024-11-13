@@ -10,7 +10,7 @@ This service uses Eureka to implement a service registry for the TMT system.
 
 ## Technologies
 
-- Java 19 (LTS)
+- Java 21 (LTS)
 - Spring Boot 3.3.2
 - Eureka Server
 

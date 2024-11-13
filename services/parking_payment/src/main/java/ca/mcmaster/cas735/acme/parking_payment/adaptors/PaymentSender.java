@@ -43,10 +43,6 @@ public class PaymentSender implements UploadToMacSystemIF, ReqToBankIF, Confirma
     }
 
     @Override
-    public void updateBill(EnforcementDto enforcementDto) {
-    }
-
-    @Override
     public void updateTransponder(ManagerDto managerDto) {
         log.info("Updating transponder status to {}: {}", outboundExchangeMac, managerDto);
         rabbitTemplate.convertAndSend(outboundExchangeMac,"*mac", translate(managerDto));
