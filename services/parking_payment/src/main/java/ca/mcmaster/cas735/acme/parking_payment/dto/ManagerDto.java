@@ -6,12 +6,13 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class ManagerDto {
+    private String licensePlate;
     private String macID;
     private Integer bill;
     private Integer timeStamp;
     private String paymentMethod;
 }
 
-//{"macID": "400608194", "bill":10, "timeStamp": 1731425099, "paymentMethod": "bank"}
-//{"macID": "400608194", "bill":10, "timeStamp": 1731425099, "paymentMethod": "mac"}
-//{"macID": "400608194", "bill":10, "timeStamp": 1731425099, "paymentMethod": "others"}
+//{"licensePlate": "E57U1","macID": "400608194", "bill":10, "timeStamp": 1731425099, "paymentMethod": "bank"}
+//{"licensePlate": "E57U1","macID": "400608194", "bill":10, "timeStamp": 1731425099, "paymentMethod": "mac"}
+//{"licensePlate": "E57U1","macID": "400608194", "bill":10, "timeStamp": 1731425099, "paymentMethod": "others"}
