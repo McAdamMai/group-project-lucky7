@@ -1,0 +1,39 @@
+spring:
+  rabbitmq:
+    username: admin
+    password: cas735
+    host: localhost
+    port: 5672
+
+  application:
+    name: parking_payment
+
+logging.level:
+  ca.mcmaster.cas735.lucky7.parking.payment:
+    adapter:  INFO # DEBUG for fine-grained trace
+    business: INFO
+
+server:
+  port: 9080
+
+app:
+    messaging:
+      inbound-exchange-enforcement: enforcement_msg
+      inbound-exchange-gate: in_gate_msg
+      inbound-exchange-manager: in_manager_msg
+      inbound-exchange-bank: in_bank_msg
+      outbound-exchange-bank: out_bank_msg
+      outbound-exchange-gate: out_gate_msg
+      outbound-exchange-manager: out_manager_msg
+      outbound-exchange-Mac: out_mac_msg
+
+info:
+  application:
+    description: '@project.description@'
+    version:     '@project.version@'
+
+eureka:
+  client:
+    healthcheck:
+      enabled: true
+

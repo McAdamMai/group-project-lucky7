@@ -7,7 +7,7 @@ services:
   service-registry:
       container_name: service-registry
       build:
-        context: service_registry
+        context: ./service_registry
       ports:
         - "8761:8761"
       healthcheck:

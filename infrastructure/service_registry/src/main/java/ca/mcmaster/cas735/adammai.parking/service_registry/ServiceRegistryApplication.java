@@ -1,5 +1,4 @@
-package ca.mcmaster.cas735.acme.service_registry;
-
+package ca.mcmaster.cas735.adammai.parking.service_registry;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.cloud.netflix.eureka.server.EnableEurekaServer;
