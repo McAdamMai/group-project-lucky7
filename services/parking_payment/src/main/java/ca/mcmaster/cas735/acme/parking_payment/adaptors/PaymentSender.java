@@ -24,7 +24,7 @@ import java.util.Map;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class PaymentSender implements UploadToMacSystemIF, ReqToBankIF, ConfirmationToManager, ConfirmationToGate {
+public class PaymentSender implements UploadToMacSystemIF, ReqToBankIF, ConfirmationToManager {
 
     private final String paymentRequest = "Bank account: , Expire: , Code: ;";
     private final RabbitTemplate rabbitTemplate; //new a rabbit template
@@ -86,7 +86,7 @@ public class PaymentSender implements UploadToMacSystemIF, ReqToBankIF, Confirma
     }
 
     // functions for ConfirmationToGate
-    @Override
+    /*@Override
     public void sendConfirmationToGate(GateConfirmationDto gateConfirmationDto) {
         log.info("Sending confirmation to gate: {}", gateConfirmationDto);
         rabbitTemplate.convertAndSend(outboundExchangeGate,"*gate", translate(gateConfirmationDto));
@@ -95,7 +95,7 @@ public class PaymentSender implements UploadToMacSystemIF, ReqToBankIF, Confirma
     public TopicExchange outboundGate() {
         // this will create the outbound exchange if it does not exist
         return new TopicExchange(outboundExchangeGate);
-    }
+    }*/
 
     // universal translator
     private <T> String translate(T dto) {

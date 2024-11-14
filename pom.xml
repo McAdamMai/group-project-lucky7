@@ -18,6 +18,7 @@
         <module>services/parking_receiver</module>
         <module>services/parking_payment</module>
         <module>services/parking_management</module>
+        <module>services/parking_gate</module>
     </modules>
 
 </project>

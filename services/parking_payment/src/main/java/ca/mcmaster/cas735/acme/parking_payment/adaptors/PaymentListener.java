@@ -43,20 +43,14 @@ public class PaymentListener {
         // making sure messages from different exchanges will trigger different functions
         BankRespDto bankRespDto = translate(message, BankRespDto.class);
         log.info("Received response from bank: {}", bankRespDto);
-        if(bankRespDto !=null){
-            if(bankRespDto.getAck()){
-                paymentConfirmed = true;
-                log.info("Payment received");
-            }else{
-                log.info("Payment failed, please try again");
-            }
-        }else{
-            log.info("Bank response is null");
-        }
+        GateConfirmationDto gateConfirmationDto = new GateConfirmationDto();
+        gateConfirmationDto.setPaymentStatus(bankRespDto.getAck()); // return ack from bank to gate, if payment fails after trials, officer can let go
+        gateConfirmationDto.setLicensePlate(bankRespDto.getInfo());
+        confirmationToGate.sendConfirmationToGate(gateConfirmationDto); // payment service only responsible for conveying msg
     }
 
-    //listener for the gate-------------------
-    @RabbitListener(bindings = @QueueBinding(
+    //listener for the gate-------------------//change to Rest
+    /*@RabbitListener(bindings = @QueueBinding(
             value = @Queue(value = "payment_gate.queue", durable = "true"),
             exchange = @Exchange(value = "${app.messaging.inbound-exchange-gate}",
                     ignoreDeclarationExceptions = "true", type = "topic"),
@@ -77,7 +71,7 @@ public class PaymentListener {
         }else {
             log.info("Gate response is null");
         }
-    }
+    }*/
 
     //listener for the parking manager-------------------
     @RabbitListener(bindings = @QueueBinding(

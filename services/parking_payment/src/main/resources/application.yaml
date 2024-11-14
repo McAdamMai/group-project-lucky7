@@ -14,7 +14,7 @@ logging.level:
     business: INFO
 
 server:
-  port: 9081
+  port: 8081
 
 app:
     messaging:
