@@ -1,0 +1,54 @@
+spring:
+    application:
+        name: parking-manager
+
+    rabbitmq:
+        username: admin
+        password: cas735
+    datasource:
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        url: jdbc:mysql://localhost:3306/parking-transponder
+        username: root
+        password: mzh1501130304
+    jpa:
+      hibernate:
+          ddl-auto: update
+
+logging.level:
+    ca.mcmaster.cas735.adammai.parking.parking_manager:
+        adapter:  INFO # DEBUG for fine-grained trace
+        business: INFO
+
+server:
+    port: 9080
+
+app:
+    custom:
+        mqtt:
+            host: localhost
+            port: 1883
+            topic: parking_manager
+        messaging:
+            inbound-exchange-payment: payment2manager_msg
+            outbound-exchange-payment: manager2payment_msg
+
+management:
+    info:
+        env:
+            enabled: true
+    endpoints:
+        web:
+            exposure:
+                include: info,health
+            base-path: /actuator
+
+info:
+    application:
+        description: '@project.description@'
+        version:     '@project.version@'
+
+eureka:
+    client:
+        healthcheck:
+            enabled: true
+
