@@ -76,7 +76,7 @@ public class PaymentSender implements UploadToMacSystemIF, ReqToBankIF, Confirma
     // functions for ConfirmationToManager
     @Override
     public void sendConfirmationToManager(ManagerConfirmationDto managerConfirmationDto){
-        log.info("Sending confirmation to manager: {}", managerConfirmationDto);
+        log.info("Sending confirmation to manager: {},{}",outboundExchangeManager, managerConfirmationDto);
         rabbitTemplate.convertAndSend(outboundExchangeManager,"*manager", translate(managerConfirmationDto));
     }
     @Bean

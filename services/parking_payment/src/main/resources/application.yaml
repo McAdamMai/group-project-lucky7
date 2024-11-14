@@ -14,17 +14,17 @@ logging.level:
     business: INFO
 
 server:
-  port: 9080
+  port: 9081
 
 app:
     messaging:
       inbound-exchange-enforcement: enforcement_msg
       inbound-exchange-gate: in_gate_msg
-      inbound-exchange-manager: in_manager_msg
+      inbound-exchange-manager: manager2payment_msg
       inbound-exchange-bank: in_bank_msg
       outbound-exchange-bank: out_bank_msg
       outbound-exchange-gate: out_gate_msg
-      outbound-exchange-manager: out_manager_msg
+      outbound-exchange-manager: payment2manager_msg
       outbound-exchange-Mac: out_mac_msg
 
 info:

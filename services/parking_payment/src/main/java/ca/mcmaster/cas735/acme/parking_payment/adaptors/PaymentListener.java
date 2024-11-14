@@ -90,6 +90,8 @@ public class PaymentListener {
         ManagerDto managerDto = translate(message, ManagerDto.class);
         ManagerConfirmationDto  managerConfirmationDto = new ManagerConfirmationDto();
         managerConfirmationDto.setMacID(managerDto.getMacID());
+        managerConfirmationDto.setTimeStamp(managerDto.getTimeStamp());
+        managerConfirmationDto.setLicensePlate(managerDto.getLicensePlate());
         managerConfirmationDto.setPaymentStatus(false); //initialize confirmation dto
         log.info("Received response from bank: {}", managerDto);
         if(managerDto != null) {
