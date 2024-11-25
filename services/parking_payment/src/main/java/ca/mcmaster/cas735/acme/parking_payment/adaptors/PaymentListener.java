@@ -1,16 +1,13 @@
 package ca.mcmaster.cas735.acme.parking_payment.adaptors;
 
+import ca.mcmaster.cas735.acme.parking_payment.ports.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ca.mcmaster.cas735.acme.parking_payment.dto.EnforcementDto;
 import ca.mcmaster.cas735.acme.parking_payment.dto.ManagerDto;
 import ca.mcmaster.cas735.acme.parking_payment.dto.BankRespDto;
-import ca.mcmaster.cas735.acme.parking_payment.dto.ManagerConfirmationDto;
 import ca.mcmaster.cas735.acme.parking_payment.dto.GateDto;
+import ca.mcmaster.cas735.acme.parking_payment.dto.ManagerConfirmationDto;
 import ca.mcmaster.cas735.acme.parking_payment.dto.GateConfirmationDto;
-import ca.mcmaster.cas735.acme.parking_payment.ports.ReqToBankIF;
-import ca.mcmaster.cas735.acme.parking_payment.ports.UploadToMacSystemIF;
-import ca.mcmaster.cas735.acme.parking_payment.ports.ConfirmationToManager;
-import ca.mcmaster.cas735.acme.parking_payment.ports.ConfirmationToGate;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
@@ -30,7 +27,9 @@ public class PaymentListener {
     private final UploadToMacSystemIF uploadToMacSystemIF;
     private final ReqToBankIF reqToBankIF;
     private final ConfirmationToManager confirmationToManager;
-    private final ConfirmationToGate confirmationToGate;
+    private final ConfirmationToGateMsgBus confirmationToGateMsgBus;
+    //private final ConfirmationToGateREST confirmationToGateREST; gate confirmation using REST
+
     private boolean paymentConfirmed = false;
 
     @RabbitListener(bindings = @QueueBinding(
@@ -46,16 +45,16 @@ public class PaymentListener {
         GateConfirmationDto gateConfirmationDto = new GateConfirmationDto();
         gateConfirmationDto.setPaymentStatus(bankRespDto.getAck()); // return ack from bank to gate, if payment fails after trials, officer can let go
         gateConfirmationDto.setLicensePlate(bankRespDto.getInfo());
-        confirmationToGate.sendConfirmationToGate(gateConfirmationDto); // payment service only responsible for conveying msg
+        //confirmationToGateREST.sendConfirmationToGate(gateConfirmationDto); // gate confirmation using REST
     }
 
     //listener for the gate-------------------//change to Rest
-    /*@RabbitListener(bindings = @QueueBinding(
+    @RabbitListener(bindings = @QueueBinding(
             value = @Queue(value = "payment_gate.queue", durable = "true"),
             exchange = @Exchange(value = "${app.messaging.inbound-exchange-gate}",
                     ignoreDeclarationExceptions = "true", type = "topic"),
-            key = "*gate"))
-    public void listenGate(String message, @Header(AmqpHeaders.CONSUMER_QUEUE) String queue) {
+            key = "*gate2payment"))
+    public void listenGate(String message, @Header(AmqpHeaders.CONSUMER_QUEUE) String queue) { // generate payment ID
         System.out.println(message + queue + 'b');
         GateDto gateRespDto = translate(message, GateDto.class);
         GateConfirmationDto gateConfirmationDto = new GateConfirmationDto();
@@ -67,11 +66,11 @@ public class PaymentListener {
             log.info("visitors pay transponder via bank");
             processPayment();
             gateConfirmationDto.setPaymentStatus(true);
-            confirmationToGate.sendConfirmationToGate(gateConfirmationDto);
+            confirmationToGateMsgBus.sendConfirmationToGate(gateConfirmationDto);
         }else {
             log.info("Gate response is null");
         }
-    }*/
+    }
 
     //listener for the parking manager-------------------
     @RabbitListener(bindings = @QueueBinding(

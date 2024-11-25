@@ -22,7 +22,7 @@ app:
       inbound-exchange-gate: in_gate_msg
       inbound-exchange-manager: manager2payment_msg
       inbound-exchange-bank: in_bank_msg
-      outbound-exchange-bank: out_bank_msg
+      outbound-exchange-payment: out_payment_msg
       outbound-exchange-gate: out_gate_msg
       outbound-exchange-manager: payment2manager_msg
       outbound-exchange-Mac: out_mac_msg

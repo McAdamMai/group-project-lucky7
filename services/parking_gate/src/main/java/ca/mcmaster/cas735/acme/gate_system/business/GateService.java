@@ -6,6 +6,7 @@ import ca.mcmaster.cas735.acme.gate_system.dtos.Gate2PermitReqDto;
 import ca.mcmaster.cas735.acme.gate_system.dtos.ParkingInfoRequest;
 import ca.mcmaster.cas735.acme.gate_system.model.GateSystemInfo;
 import ca.mcmaster.cas735.acme.gate_system.ports.GateIF;
+import ca.mcmaster.cas735.acme.gate_system.ports.PaymentLaunchingIF;
 import ca.mcmaster.cas735.acme.gate_system.repository.GateSystemRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,7 @@ public class GateService {
     private final GateSystemRepository gateSystemRepository;
     private final GateController gateController;
     private final GateIF gateIF;
+    private final PaymentLaunchingIF paymentLaunchingIF;
     private final WebClient webClient = WebClient.builder().baseUrl("http://localhost:9081").build();
 
     public void saveTransponder(ParkingInfoRequest parkingInfoRequest) {
@@ -100,8 +102,9 @@ public class GateService {
 
         Gate2PaymentReqDto gate2PaymentReqDto = computeParkingPrice(QRCode);
         log.info("Computed parking price: {}", gate2PaymentReqDto.getBill());
-        sendPayment(gate2PaymentReqDto);
+        //sendPayment(gate2PaymentReqDto); replace this with launchPayment
         // Send the parking price to the payment system
+        paymentLaunchingIF.launchPaymentMsgBus(gate2PaymentReqDto); // Send payment info to payment system
         log.info("Sending parking price to payment system: {}", gate2PaymentReqDto);
         // update availability of parking spots
         removeTransponder(gate2PaymentReqDto.getLicensePlate());
@@ -134,7 +137,6 @@ public class GateService {
 
     }
 
-
     public void openGate() {
         // Open the gate
         log.info("Gate is opened");
@@ -147,7 +149,7 @@ public class GateService {
         gateIF.updateAvailabilityOfParkingSpots(isExit);
 
     }*/
-    private void sendPayment(Gate2PaymentReqDto gate2PaymentReqDto){
+    private void sendPaymentREST(Gate2PaymentReqDto gate2PaymentReqDto){
         log.info("Sending payment request to payment: {}", gate2PaymentReqDto);
         webClient.post()
                 .uri(uriBuilder -> uriBuilder

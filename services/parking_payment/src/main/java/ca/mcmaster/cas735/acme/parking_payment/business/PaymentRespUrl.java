@@ -1,7 +1,7 @@
 package ca.mcmaster.cas735.acme.parking_payment.business;
 
 import ca.mcmaster.cas735.acme.parking_payment.dto.GateConfirmationDto;
-import ca.mcmaster.cas735.acme.parking_payment.ports.ConfirmationToGate;
+import ca.mcmaster.cas735.acme.parking_payment.ports.ConfirmationToGateREST;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -12,13 +12,13 @@ import org.springframework.web.reactive.function.client.WebClient;
 @Slf4j
 @RequiredArgsConstructor
 @Transactional
-public class PaymentRespUrl implements ConfirmationToGate {
+public class PaymentRespUrl implements ConfirmationToGateREST {
 
     private final WebClient webClient = WebClient.builder().baseUrl("http://localhost:9081").build();
 
 
     @Override
-    public void sendConfirmationToGate(GateConfirmationDto gateConfirmationDto){
+    public void sendConfirmationToGateREST(GateConfirmationDto gateConfirmationDto){
         log.info("Sending confirmation to gate: {}", gateConfirmationDto);
         webClient.post()
                 .uri(uriBuilder -> uriBuilder

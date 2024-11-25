@@ -1,5 +1,7 @@
 package ca.mcmaster.cas735.acme.parking_payment.adaptors;
 
+import ca.mcmaster.cas735.acme.parking_payment.dto.GateConfirmationDto;
+import ca.mcmaster.cas735.acme.parking_payment.ports.ConfirmationToGateMsgBus;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -7,11 +9,9 @@ import org.springframework.stereotype.Service;
 import ca.mcmaster.cas735.acme.parking_payment.dto.EnforcementDto;
 import ca.mcmaster.cas735.acme.parking_payment.dto.ManagerDto;
 import ca.mcmaster.cas735.acme.parking_payment.dto.ManagerConfirmationDto;
-import ca.mcmaster.cas735.acme.parking_payment.dto.GateConfirmationDto;
 import ca.mcmaster.cas735.acme.parking_payment.ports.ReqToBankIF;
 import ca.mcmaster.cas735.acme.parking_payment.ports.UploadToMacSystemIF;
 import ca.mcmaster.cas735.acme.parking_payment.ports.ConfirmationToManager;
-import ca.mcmaster.cas735.acme.parking_payment.ports.ConfirmationToGate;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,7 +24,7 @@ import java.util.Map;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class PaymentSender implements UploadToMacSystemIF, ReqToBankIF, ConfirmationToManager {
+public class PaymentSender implements UploadToMacSystemIF, ReqToBankIF, ConfirmationToManager,ConfirmationToGateMsgBus {
 
     private final String paymentRequest = "Bank account: , Expire: , Code: ;";
     private final RabbitTemplate rabbitTemplate; //new a rabbit template
@@ -86,7 +86,7 @@ public class PaymentSender implements UploadToMacSystemIF, ReqToBankIF, Confirma
     }
 
     // functions for ConfirmationToGate
-    /*@Override
+    @Override
     public void sendConfirmationToGate(GateConfirmationDto gateConfirmationDto) {
         log.info("Sending confirmation to gate: {}", gateConfirmationDto);
         rabbitTemplate.convertAndSend(outboundExchangeGate,"*gate", translate(gateConfirmationDto));
@@ -95,7 +95,7 @@ public class PaymentSender implements UploadToMacSystemIF, ReqToBankIF, Confirma
     public TopicExchange outboundGate() {
         // this will create the outbound exchange if it does not exist
         return new TopicExchange(outboundExchangeGate);
-    }*/
+    }
 
     // universal translator
     private <T> String translate(T dto) {
@@ -106,4 +106,5 @@ public class PaymentSender implements UploadToMacSystemIF, ReqToBankIF, Confirma
             throw new RuntimeException(e);
         }
     }
+
 }

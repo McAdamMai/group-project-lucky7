@@ -2,12 +2,11 @@ package ca.mcmaster.cas735.acme.parking_payment.controller;
 
 import ca.mcmaster.cas735.acme.parking_payment.dto.GateDto;
 import ca.mcmaster.cas735.acme.parking_payment.dto.GateConfirmationDto;
-import ca.mcmaster.cas735.acme.parking_payment.ports.ConfirmationToGate;
+import ca.mcmaster.cas735.acme.parking_payment.ports.ConfirmationToGateREST;
 import ca.mcmaster.cas735.acme.parking_payment.ports.ReqToBankIF;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -17,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 public class PaymentRequestController {
 
-    private final ConfirmationToGate confirmationToGate;
+    private final ConfirmationToGateREST confirmationToGateREST;
     private final ReqToBankIF reqToBankIF;
 
     @PostMapping("/gate")
