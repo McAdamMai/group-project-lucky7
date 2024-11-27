@@ -5,8 +5,8 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class BankRespDto {
-    private String info;
+public class Bank2PaymentDto {
+    private String PaymentID;
     private Boolean ack; // set to true
 }
 

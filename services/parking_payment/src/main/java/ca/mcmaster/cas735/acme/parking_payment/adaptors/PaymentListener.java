@@ -1,13 +1,16 @@
 package ca.mcmaster.cas735.acme.parking_payment.adaptors;
 
+import ca.mcmaster.cas735.acme.parking_payment.business.ProcessPaymentInfo;
 import ca.mcmaster.cas735.acme.parking_payment.ports.*;
+import ca.mcmaster.cas735.acme.parking_payment.utils.TypeOfPaymentMethod;
+import ca.mcmaster.cas735.acme.parking_payment.utils.TypeOfPaymentStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import ca.mcmaster.cas735.acme.parking_payment.dto.EnforcementDto;
-import ca.mcmaster.cas735.acme.parking_payment.dto.ManagerDto;
-import ca.mcmaster.cas735.acme.parking_payment.dto.BankRespDto;
-import ca.mcmaster.cas735.acme.parking_payment.dto.GateDto;
-import ca.mcmaster.cas735.acme.parking_payment.dto.ManagerConfirmationDto;
-import ca.mcmaster.cas735.acme.parking_payment.dto.GateConfirmationDto;
+import ca.mcmaster.cas735.acme.parking_payment.dto.Enforcement2PaymentDto;
+import ca.mcmaster.cas735.acme.parking_payment.dto.Management2PaymentDto;
+import ca.mcmaster.cas735.acme.parking_payment.dto.Bank2PaymentDto;
+import ca.mcmaster.cas735.acme.parking_payment.dto.Gate2PaymentDto;
+import ca.mcmaster.cas735.acme.parking_payment.dto.PaymentConfirmation2ManagementDto;
+import ca.mcmaster.cas735.acme.parking_payment.dto.PaymentConfirmation2GateDto;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
@@ -24,14 +27,14 @@ import java.util.Objects;
 @RequiredArgsConstructor
 @Slf4j
 public class PaymentListener {
-    private final UploadToMacSystemIF uploadToMacSystemIF;
-    private final ReqToBankIF reqToBankIF;
-    private final ConfirmationToManager confirmationToManager;
-    private final ConfirmationToGateMsgBus confirmationToGateMsgBus;
+    private final Payment2MacSystemIF payment2MacSystemIF;
+    private final PaymentConfirmation2ManagerIF paymentConfirmation2ManagerIF;
+    private final ProcessPaymentInfo processPaymentInfo;
     //private final ConfirmationToGateREST confirmationToGateREST; gate confirmation using REST
 
-    private boolean paymentConfirmed = false;
+   // private boolean paymentConfirmed = false;
 
+    //listener for the bank-------------------
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(value = "payment_bank.queue", durable = "true"),
             exchange = @Exchange(value = "${app.messaging.inbound-exchange-bank}",
@@ -40,15 +43,12 @@ public class PaymentListener {
     public void listenBank(String message, @Header(AmqpHeaders.CONSUMER_QUEUE) String queue) { //listener for bank
         System.out.println(message + queue + 'a');
         // making sure messages from different exchanges will trigger different functions
-        BankRespDto bankRespDto = translate(message, BankRespDto.class);
-        log.info("Received response from bank: {}", bankRespDto);
-        GateConfirmationDto gateConfirmationDto = new GateConfirmationDto();
-        gateConfirmationDto.setPaymentStatus(bankRespDto.getAck()); // return ack from bank to gate, if payment fails after trials, officer can let go
-        gateConfirmationDto.setLicensePlate(bankRespDto.getInfo());
-        //confirmationToGateREST.sendConfirmationToGate(gateConfirmationDto); // gate confirmation using REST
+        Bank2PaymentDto bank2PaymentDto = translate(message, Bank2PaymentDto.class);
+        log.info("Received response from bank: {}", bank2PaymentDto);
+        processPaymentInfo.processConfirmationFromBank(bank2PaymentDto);
     }
 
-    //listener for the gate-------------------//change to Rest
+    //listener for the gate-------------------
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(value = "payment_gate.queue", durable = "true"),
             exchange = @Exchange(value = "${app.messaging.inbound-exchange-gate}",
@@ -56,20 +56,8 @@ public class PaymentListener {
             key = "*gate2payment"))
     public void listenGate(String message, @Header(AmqpHeaders.CONSUMER_QUEUE) String queue) { // generate payment ID
         System.out.println(message + queue + 'b');
-        GateDto gateRespDto = translate(message, GateDto.class);
-        GateConfirmationDto gateConfirmationDto = new GateConfirmationDto();
-        gateConfirmationDto.setLicensePlate(gateRespDto.getLicensePlate());
-        gateConfirmationDto.setPaymentStatus(false); //initialize confirmation dto
-        log.info("Received response from bank: {}", gateRespDto);
-        if(gateConfirmationDto !=null){
-            reqToBankIF.sendPaymentRequest(gateRespDto.getLicensePlate(),gateRespDto.getBill());
-            log.info("visitors pay transponder via bank");
-            processPayment();
-            gateConfirmationDto.setPaymentStatus(true);
-            confirmationToGateMsgBus.sendConfirmationToGate(gateConfirmationDto);
-        }else {
-            log.info("Gate response is null");
-        }
+        Gate2PaymentDto gate2PaymentDto = translate(message, Gate2PaymentDto.class);
+        processPaymentInfo.processPaymentFromGate(gate2PaymentDto); // handle gateDto to processor
     }
 
     //listener for the parking manager-------------------
@@ -80,32 +68,23 @@ public class PaymentListener {
             key = "*manager"))
     public void listenManager(String message, @Header(AmqpHeaders.CONSUMER_QUEUE) String queue) {
         System.out.println(message + queue + 'c');
-        ManagerDto managerDto = translate(message, ManagerDto.class);
-        ManagerConfirmationDto  managerConfirmationDto = new ManagerConfirmationDto();
-        managerConfirmationDto.setMacID(managerDto.getMacID());
-        managerConfirmationDto.setTimeStamp(managerDto.getTimeStamp());
-        managerConfirmationDto.setLicensePlate(managerDto.getLicensePlate());
-        managerConfirmationDto.setPaymentStatus(false); //initialize confirmation dto
-        log.info("Received response from bank: {}", managerDto);
-        if(managerDto != null) {
-            if(Objects.equals(managerDto.getPaymentMethod(), "bank")) {
-                reqToBankIF.sendPaymentRequest(managerDto.getMacID(), managerDto.getBill()); //paid via bank
+        Management2PaymentDto management2PaymentDto = translate(message, Management2PaymentDto.class);
+        if(management2PaymentDto != null) {
+            if(Objects.equals(management2PaymentDto.getPaymentMethod(), TypeOfPaymentMethod.Bank)) {
                 log.info("Users pay transponder via bank");
-                processPayment(); // wait for payment to be processed
-                uploadToMacSystemIF.updateTransponder(managerDto); // record the bill and transponder's start date
-                managerConfirmationDto.setPaymentStatus(true); // if payment failed, code will not continue.
-                confirmationToManager.sendConfirmationToManager(managerConfirmationDto);// sending confirmation to the parking manager
-
-            }else if (Objects.equals(managerDto.getPaymentMethod(), "mac")) {
+                processPaymentInfo.processPaymentFromManagement(management2PaymentDto);
+            }else if (Objects.equals(management2PaymentDto.getPaymentMethod(), TypeOfPaymentMethod.Mac)) {
                 log.info("Users pay transponder via payslip");
-                uploadToMacSystemIF.updateTransponder(managerDto); // record the bill and transponder's start date
-                managerConfirmationDto.setPaymentStatus(true);
-                confirmationToManager.sendConfirmationToManager(managerConfirmationDto);
-            }else{
-                log.info("Unknown payment method");
+                PaymentConfirmation2ManagementDto paymentConfirmation2ManagementDto = new PaymentConfirmation2ManagementDto();
+                paymentConfirmation2ManagementDto.setMacID(management2PaymentDto.getMacID());
+                paymentConfirmation2ManagementDto.setPaymentStatus(TypeOfPaymentStatus.Success);
+                payment2MacSystemIF.updateTransponder(management2PaymentDto); // external
+                paymentConfirmation2ManagerIF.sendConfirmationToManager(paymentConfirmation2ManagementDto);
+            }else {
+                log.error("Unknown payment method");
             }
         }else {
-            log.info("No valid message found from Parking Manager, please retry");
+            log.error("No valid message found from Parking Manager");
         }
     }
 
@@ -117,9 +96,9 @@ public class PaymentListener {
             key = "*enforcement"))
     public void listenEnforcement(String message, @Header(AmqpHeaders.CONSUMER_QUEUE) String queue) {
         System.out.println(message + queue + 'd');
-        EnforcementDto enforcementDto = translate(message, EnforcementDto.class);
-        log.info("Received response from bank: {}", enforcementDto);
-        uploadToMacSystemIF.updateFine(enforcementDto); //update fine status on Mac system
+        Enforcement2PaymentDto enforcement2PaymentDto = translate(message, Enforcement2PaymentDto.class);
+        log.info("Received response from bank: {}", enforcement2PaymentDto);
+        payment2MacSystemIF.updateFine(enforcement2PaymentDto); //update fine status on Mac system
     }
 
     private <T> T translate(String message, Class<T> clazz) {
@@ -131,17 +110,4 @@ public class PaymentListener {
         }
     }
 
-    private void processPayment(){
-        paymentConfirmed = false; // initialize payment status
-        log.info("Processing payment, please hold on");
-        while(!paymentConfirmed){
-            try{
-                Thread.sleep(1000);
-            }catch (InterruptedException e){
-                Thread.currentThread().interrupt(); // wait for payment
-            }
-        }
-        log.info("Payment confirmed");
-        paymentConfirmed = false; // reset payment status
-    }
 }

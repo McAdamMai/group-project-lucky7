@@ -5,7 +5,7 @@ import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class Payment2GateResDto {
+public class PaymentID2GateDto {
+    private String PaymentID;
     private String licensePlate;
-    private Boolean paymentStatus;
 }

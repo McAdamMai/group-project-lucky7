@@ -5,6 +5,12 @@ spring:
     host: localhost
     port: 5672
 
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/gate_system
+    username: root
+    password: mzh1501130304
+
   application:
     name: parking_payment
 
@@ -19,11 +25,12 @@ server:
 app:
     messaging:
       inbound-exchange-enforcement: enforcement_msg
-      inbound-exchange-gate: in_gate_msg
+      inbound-exchange-gate: gate2payment_msg
       inbound-exchange-manager: manager2payment_msg
       inbound-exchange-bank: in_bank_msg
       outbound-exchange-payment: out_payment_msg
-      outbound-exchange-gate: out_gate_msg
+      outbound-exchange-pos: payment2pos_msg
+      outbound-exchange-gate: payment2gate_msg
       outbound-exchange-manager: payment2manager_msg
       outbound-exchange-Mac: out_mac_msg
 

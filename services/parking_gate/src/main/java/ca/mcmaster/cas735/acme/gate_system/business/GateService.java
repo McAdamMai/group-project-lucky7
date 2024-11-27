@@ -107,7 +107,7 @@ public class GateService {
         paymentLaunchingIF.launchPaymentMsgBus(gate2PaymentReqDto); // Send payment info to payment system
         log.info("Sending parking price to payment system: {}", gate2PaymentReqDto);
         // update availability of parking spots
-        removeTransponder(gate2PaymentReqDto.getLicensePlate());
+        removeTransponder(gate2PaymentReqDto.getLicensePlate());// shouldn't the gate stay close until it have received msg from gate?
         // open the gate
         openGate();
     }

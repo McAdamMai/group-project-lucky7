@@ -7,12 +7,13 @@ spring:
         password: cas735
     datasource:
         driver-class-name: com.mysql.cj.jdbc.Driver
-        url: jdbc:mysql://localhost:3306/gate_system
+        url: jdbc:mysql://localhost:3306/parking-transponder
         username: root
         password: mzh1501130304
     jpa:
-      hibernate:
-          ddl-auto: update
+        hibernate:
+            ddl-auto: update
+
 
 logging.level:
     ca.mcmaster.cas735.acme.parking.gate_system:
@@ -31,8 +32,9 @@ app:
             qrTopic: qrcode
             buttonClickTopic: buttonClick
         messaging:
-            inbound-exchange-payment: transponder2manager_msg
-            outbound-exchange-payment: gateSystem2extGate_msg
+            inbound-exchange-payment_ID: payment2gateConfirmation_msg
+            inbound-exchange-payment_confirmation: payment2gateID_msg
+            outbound-exchange-payment: gate2payment_msg
 
 management:
     info:

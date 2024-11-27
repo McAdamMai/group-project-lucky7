@@ -16,7 +16,7 @@ public class TransponderInfo{
     @Id
     private String macID;
     private String licensePlate;
-    //private BigInteger transponderID;
+    private String transponderID;
     private Integer registerTime;
     private Integer expireTime;
 }

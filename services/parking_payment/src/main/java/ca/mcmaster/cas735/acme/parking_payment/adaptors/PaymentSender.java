@@ -1,17 +1,14 @@
 package ca.mcmaster.cas735.acme.parking_payment.adaptors;
 
-import ca.mcmaster.cas735.acme.parking_payment.dto.GateConfirmationDto;
-import ca.mcmaster.cas735.acme.parking_payment.ports.ConfirmationToGateMsgBus;
+import ca.mcmaster.cas735.acme.parking_payment.dto.*;
+import ca.mcmaster.cas735.acme.parking_payment.ports.PaymentConfirmation2GateMsgBusIF;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ca.mcmaster.cas735.acme.parking_payment.dto.EnforcementDto;
-import ca.mcmaster.cas735.acme.parking_payment.dto.ManagerDto;
-import ca.mcmaster.cas735.acme.parking_payment.dto.ManagerConfirmationDto;
-import ca.mcmaster.cas735.acme.parking_payment.ports.ReqToBankIF;
-import ca.mcmaster.cas735.acme.parking_payment.ports.UploadToMacSystemIF;
-import ca.mcmaster.cas735.acme.parking_payment.ports.ConfirmationToManager;
+import ca.mcmaster.cas735.acme.parking_payment.ports.PaymentRequest2BankIF;
+import ca.mcmaster.cas735.acme.parking_payment.ports.Payment2MacSystemIF;
+import ca.mcmaster.cas735.acme.parking_payment.ports.PaymentConfirmation2ManagerIF;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
@@ -24,7 +21,7 @@ import java.util.Map;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class PaymentSender implements UploadToMacSystemIF, ReqToBankIF, ConfirmationToManager,ConfirmationToGateMsgBus {
+public class PaymentSender implements Payment2MacSystemIF, PaymentRequest2BankIF, PaymentConfirmation2ManagerIF, PaymentConfirmation2GateMsgBusIF {
 
     private final String paymentRequest = "Bank account: , Expire: , Code: ;";
     private final RabbitTemplate rabbitTemplate; //new a rabbit template
@@ -33,19 +30,20 @@ public class PaymentSender implements UploadToMacSystemIF, ReqToBankIF, Confirma
     @Value("${app.messaging.inbound-exchange-bank}") private  String inboundExchangeBank;
     @Value("${app.messaging.outbound-exchange-manager}") private  String outboundExchangeManager;
     @Value("${app.messaging.outbound-exchange-gate}") private  String outboundExchangeGate;
+    @Value("${app.messaging.outbound-exchange-pos}") private String outboundExchangePos;
 
 
     //functions for UploadToMacSystemIF
     @Override
-    public void updateFine(EnforcementDto enforcementDto) { // upload fine information to associated users
-        log.info("Updating fine status to {}: {}", outboundExchangeMac, enforcementDto);
-        rabbitTemplate.convertAndSend(outboundExchangeMac,"*mac", translate(enforcementDto));
+    public void updateFine(Enforcement2PaymentDto enforcement2PaymentDto) { // upload fine information to associated users
+        log.info("Updating fine status to {}: {}", outboundExchangeMac, enforcement2PaymentDto);
+        rabbitTemplate.convertAndSend(outboundExchangeMac,"*mac", translate(enforcement2PaymentDto));
     }
 
     @Override
-    public void updateTransponder(ManagerDto managerDto) {
-        log.info("Updating transponder status to {}: {}", outboundExchangeMac, managerDto);
-        rabbitTemplate.convertAndSend(outboundExchangeMac,"*mac", translate(managerDto));
+    public void updateTransponder(Management2PaymentDto management2PaymentDto) {
+        log.info("Updating transponder status to {}: {}", outboundExchangeMac, management2PaymentDto);
+        rabbitTemplate.convertAndSend(outboundExchangeMac,"*mac", translate(management2PaymentDto));
     }
 
     @Bean
@@ -75,9 +73,9 @@ public class PaymentSender implements UploadToMacSystemIF, ReqToBankIF, Confirma
 
     // functions for ConfirmationToManager
     @Override
-    public void sendConfirmationToManager(ManagerConfirmationDto managerConfirmationDto){
-        log.info("Sending confirmation to manager: {},{}",outboundExchangeManager, managerConfirmationDto);
-        rabbitTemplate.convertAndSend(outboundExchangeManager,"*manager", translate(managerConfirmationDto));
+    public void sendConfirmationToManager(PaymentConfirmation2ManagementDto paymentConfirmation2ManagementDto){
+        log.info("Sending confirmation to manager: {},{}",outboundExchangeManager, paymentConfirmation2ManagementDto);
+        rabbitTemplate.convertAndSend(outboundExchangeManager,"*manager", translate(paymentConfirmation2ManagementDto));
     }
     @Bean
     public TopicExchange outboundManager() {
@@ -87,14 +85,27 @@ public class PaymentSender implements UploadToMacSystemIF, ReqToBankIF, Confirma
 
     // functions for ConfirmationToGate
     @Override
-    public void sendConfirmationToGate(GateConfirmationDto gateConfirmationDto) {
-        log.info("Sending confirmation to gate: {}", gateConfirmationDto);
-        rabbitTemplate.convertAndSend(outboundExchangeGate,"*gate", translate(gateConfirmationDto));
+    public void sendConfirmationToGate(PaymentConfirmation2GateDto paymentConfirmation2GateDto) {
+        log.info("Sending confirmation to gate: {}", paymentConfirmation2GateDto);
+        rabbitTemplate.convertAndSend(outboundExchangeGate,"*payment2gate", translate(paymentConfirmation2GateDto));
     }
+
     @Bean
-    public TopicExchange outboundGate() {
+    public TopicExchange outboundGateConfirmation() {
         // this will create the outbound exchange if it does not exist
         return new TopicExchange(outboundExchangeGate);
+    }
+
+    // functions for associating payment ID with POS, this function is to external
+    @Override
+    public void sendPaymentIDPos(PaymentID2PosDto paymentID2PosDto){
+        log.info("Sending confirmation to gate: {}", paymentID2PosDto);
+        rabbitTemplate.convertAndSend(outboundExchangePos,"*payment2pos", translate(paymentID2PosDto));
+    }
+
+    @Bean
+    public TopicExchange outboundGateID() {
+        return new TopicExchange(outboundExchangePos);
     }
 
     // universal translator
