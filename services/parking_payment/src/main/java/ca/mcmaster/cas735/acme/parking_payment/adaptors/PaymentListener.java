@@ -10,7 +10,6 @@ import ca.mcmaster.cas735.acme.parking_payment.dto.Management2PaymentDto;
 import ca.mcmaster.cas735.acme.parking_payment.dto.Bank2PaymentDto;
 import ca.mcmaster.cas735.acme.parking_payment.dto.Gate2PaymentDto;
 import ca.mcmaster.cas735.acme.parking_payment.dto.PaymentConfirmation2ManagementDto;
-import ca.mcmaster.cas735.acme.parking_payment.dto.PaymentConfirmation2GateDto;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
@@ -28,7 +27,7 @@ import java.util.Objects;
 @Slf4j
 public class PaymentListener {
     private final Payment2MacSystemIF payment2MacSystemIF;
-    private final PaymentConfirmation2ManagerIF paymentConfirmation2ManagerIF;
+    private final PaymentConfirmation2ManagementIF paymentConfirmation2ManagementIF;
     private final ProcessPaymentInfo processPaymentInfo;
     //private final ConfirmationToGateREST confirmationToGateREST; gate confirmation using REST
 
@@ -65,7 +64,7 @@ public class PaymentListener {
             value = @Queue(value = "payment_manager.queue", durable = "true"),
             exchange = @Exchange(value = "${app.messaging.inbound-exchange-manager}",
                     ignoreDeclarationExceptions = "true", type = "topic"),
-            key = "*manager"))
+            key = "*manager2payment"))
     public void listenManager(String message, @Header(AmqpHeaders.CONSUMER_QUEUE) String queue) {
         System.out.println(message + queue + 'c');
         Management2PaymentDto management2PaymentDto = translate(message, Management2PaymentDto.class);
@@ -78,8 +77,9 @@ public class PaymentListener {
                 PaymentConfirmation2ManagementDto paymentConfirmation2ManagementDto = new PaymentConfirmation2ManagementDto();
                 paymentConfirmation2ManagementDto.setMacID(management2PaymentDto.getMacID());
                 paymentConfirmation2ManagementDto.setPaymentStatus(TypeOfPaymentStatus.Success);
-                payment2MacSystemIF.updateTransponder(management2PaymentDto); // external
-                paymentConfirmation2ManagerIF.sendConfirmationToManager(paymentConfirmation2ManagementDto);
+                // keep record in Mac system(external), bill will be paid through slip
+                payment2MacSystemIF.updateTransponder(paymentConfirmation2ManagementDto);
+                paymentConfirmation2ManagementIF.sendConfirmationToManager(paymentConfirmation2ManagementDto);
             }else {
                 log.error("Unknown payment method");
             }

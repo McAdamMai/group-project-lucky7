@@ -1,7 +1,7 @@
 package ca.mcmaster.cas735.acme.parking_management.ports;
 
-import ca.mcmaster.cas735.acme.parking_management.dtos.PaymentReqDto;
+import ca.mcmaster.cas735.acme.parking_management.dtos.Management2PaymentDto;
 
 public interface PaymentIF {
-    void sendToPayment(PaymentReqDto paymentReqDto);
+    void sendToPayment(Management2PaymentDto management2PaymentDto);
 }

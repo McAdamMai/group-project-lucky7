@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ca.mcmaster.cas735.acme.parking_payment.ports.PaymentRequest2BankIF;
 import ca.mcmaster.cas735.acme.parking_payment.ports.Payment2MacSystemIF;
-import ca.mcmaster.cas735.acme.parking_payment.ports.PaymentConfirmation2ManagerIF;
+import ca.mcmaster.cas735.acme.parking_payment.ports.PaymentConfirmation2ManagementIF;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,7 +21,7 @@ import java.util.Map;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class PaymentSender implements Payment2MacSystemIF, PaymentRequest2BankIF, PaymentConfirmation2ManagerIF, PaymentConfirmation2GateMsgBusIF {
+public class PaymentSender implements Payment2MacSystemIF, PaymentRequest2BankIF, PaymentConfirmation2ManagementIF, PaymentConfirmation2GateMsgBusIF {
 
     private final String paymentRequest = "Bank account: , Expire: , Code: ;";
     private final RabbitTemplate rabbitTemplate; //new a rabbit template
@@ -41,9 +41,9 @@ public class PaymentSender implements Payment2MacSystemIF, PaymentRequest2BankIF
     }
 
     @Override
-    public void updateTransponder(Management2PaymentDto management2PaymentDto) {
-        log.info("Updating transponder status to {}: {}", outboundExchangeMac, management2PaymentDto);
-        rabbitTemplate.convertAndSend(outboundExchangeMac,"*mac", translate(management2PaymentDto));
+    public void updateTransponder(PaymentConfirmation2ManagementDto paymentConfirmation2ManagementDto) {
+        log.info("Updating transponder status to {}: {}", outboundExchangeMac, paymentConfirmation2ManagementDto);
+        rabbitTemplate.convertAndSend(outboundExchangeMac,"*mac", translate(paymentConfirmation2ManagementDto));
     }
 
     @Bean
@@ -75,7 +75,7 @@ public class PaymentSender implements Payment2MacSystemIF, PaymentRequest2BankIF
     @Override
     public void sendConfirmationToManager(PaymentConfirmation2ManagementDto paymentConfirmation2ManagementDto){
         log.info("Sending confirmation to manager: {},{}",outboundExchangeManager, paymentConfirmation2ManagementDto);
-        rabbitTemplate.convertAndSend(outboundExchangeManager,"*manager", translate(paymentConfirmation2ManagementDto));
+        rabbitTemplate.convertAndSend(outboundExchangeManager,"*payment2manager", translate(paymentConfirmation2ManagementDto));
     }
     @Bean
     public TopicExchange outboundManager() {

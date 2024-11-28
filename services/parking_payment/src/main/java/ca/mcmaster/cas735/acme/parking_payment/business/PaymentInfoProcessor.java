@@ -4,6 +4,7 @@ import ca.mcmaster.cas735.acme.parking_payment.dto.*;
 import ca.mcmaster.cas735.acme.parking_payment.model.PaymentInfo;
 import ca.mcmaster.cas735.acme.parking_payment.ports.Payment2MacSystemIF;
 import ca.mcmaster.cas735.acme.parking_payment.ports.PaymentConfirmation2GateMsgBusIF;
+import ca.mcmaster.cas735.acme.parking_payment.ports.PaymentConfirmation2ManagementIF;
 import ca.mcmaster.cas735.acme.parking_payment.ports.PaymentRequest2BankIF;
 import ca.mcmaster.cas735.acme.parking_payment.repository.PaymentInfoRepository;
 import ca.mcmaster.cas735.acme.parking_payment.utils.TypeOfOrder;
@@ -23,7 +24,7 @@ public class PaymentInfoProcessor implements ProcessPaymentInfo {
     private final PaymentRequest2BankIF paymentRequest2BankIF;
     private final PaymentInfoRepository paymentInfoRepository;
     private final PaymentConfirmation2GateMsgBusIF paymentConfirmation2GateMsgBusIF;
-    private final Payment2MacSystemIF payment2MacSystemIF;
+    private final PaymentConfirmation2ManagementIF paymentConfirmation2ManagementIF;
 
     //send to bank, store in db, response to gate
     @Override
@@ -74,7 +75,7 @@ public class PaymentInfoProcessor implements ProcessPaymentInfo {
                         .setMacID(paymentInfo.getProductID()); // transponder id is index
                 paymentConfirmation2ManagementDto
                         .setPaymentStatus(bank2PaymentDto.getAck()? TypeOfPaymentStatus.Success : TypeOfPaymentStatus.Failed);
-                //confirmation and mac external? how to implement if failed
+                paymentConfirmation2ManagementIF.sendConfirmationToManager(paymentConfirmation2ManagementDto);
             }
         }else{
             log.error("Payment ID not found");
