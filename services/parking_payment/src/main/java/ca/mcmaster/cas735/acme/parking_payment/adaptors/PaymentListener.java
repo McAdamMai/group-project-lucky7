@@ -2,8 +2,8 @@ package ca.mcmaster.cas735.acme.parking_payment.adaptors;
 
 import ca.mcmaster.cas735.acme.parking_payment.business.ProcessPaymentInfo;
 import ca.mcmaster.cas735.acme.parking_payment.ports.*;
+import ca.mcmaster.cas735.acme.parking_payment.utils.PaymentStatus;
 import ca.mcmaster.cas735.acme.parking_payment.utils.TypeOfPaymentMethod;
-import ca.mcmaster.cas735.acme.parking_payment.utils.TypeOfPaymentStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import ca.mcmaster.cas735.acme.parking_payment.dto.Enforcement2PaymentDto;
 import ca.mcmaster.cas735.acme.parking_payment.dto.Management2PaymentDto;
@@ -29,16 +29,14 @@ public class PaymentListener {
     private final Payment2MacSystemIF payment2MacSystemIF;
     private final PaymentConfirmation2ManagementIF paymentConfirmation2ManagementIF;
     private final ProcessPaymentInfo processPaymentInfo;
-    //private final ConfirmationToGateREST confirmationToGateREST; gate confirmation using REST
 
-   // private boolean paymentConfirmed = false;
 
     //listener for the bank-------------------
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(value = "payment_bank.queue", durable = "true"),
             exchange = @Exchange(value = "${app.messaging.inbound-exchange-bank}",
                     ignoreDeclarationExceptions = "true", type = "topic"),
-            key = "*bank"))
+            key = "*bank2payment"))
     public void listenBank(String message, @Header(AmqpHeaders.CONSUMER_QUEUE) String queue) { //listener for bank
         System.out.println(message + queue + 'a');
         // making sure messages from different exchanges will trigger different functions
@@ -76,7 +74,7 @@ public class PaymentListener {
                 log.info("Users pay transponder via payslip");
                 PaymentConfirmation2ManagementDto paymentConfirmation2ManagementDto = new PaymentConfirmation2ManagementDto();
                 paymentConfirmation2ManagementDto.setMacID(management2PaymentDto.getMacID());
-                paymentConfirmation2ManagementDto.setPaymentStatus(TypeOfPaymentStatus.Success);
+                paymentConfirmation2ManagementDto.setPaymentStatus(PaymentStatus.Success);
                 // keep record in Mac system(external), bill will be paid through slip
                 payment2MacSystemIF.updateTransponder(paymentConfirmation2ManagementDto);
                 paymentConfirmation2ManagementIF.sendConfirmationToManager(paymentConfirmation2ManagementDto);

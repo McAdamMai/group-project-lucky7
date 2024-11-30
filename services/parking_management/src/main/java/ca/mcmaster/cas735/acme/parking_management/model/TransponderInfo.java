@@ -16,7 +16,6 @@ import lombok.*;
 @Builder
 public class TransponderInfo{
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private String macID;
     @Column(name = "transponderID") //can be null since transponder is given after payment done
     private String transponderID; //can be used for deduplicate key

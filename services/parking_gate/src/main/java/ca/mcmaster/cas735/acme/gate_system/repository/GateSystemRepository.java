@@ -7,4 +7,5 @@ public interface GateSystemRepository extends JpaRepository<GateSystemInfo,Strin
 {
     GateSystemInfo findByQRCode(Long QRCode);
     GateSystemInfo findByLicensePlate(String licensePlate);
+    void updateGateSystemInfo(GateSystemInfo gateSystemInfo);
 }

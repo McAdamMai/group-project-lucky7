@@ -6,6 +6,6 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 public class PaymentID2PosDto { //change to the pos
-    private String PaymentID;
-    private String gateID;
+    private String deviceID;
+    private Integer bill;
 }

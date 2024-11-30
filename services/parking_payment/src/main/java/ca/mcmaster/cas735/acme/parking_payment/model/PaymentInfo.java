@@ -1,14 +1,12 @@
 package ca.mcmaster.cas735.acme.parking_payment.model;
 
-import ca.mcmaster.cas735.acme.parking_payment.utils.TypeOfOrder;
-import ca.mcmaster.cas735.acme.parking_payment.utils.TypeOfPaymentStatus;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.*;
 
 @Entity
-@Table(name = "t_paymentInfo")
+    @Table(name = "t_payment_info")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -17,9 +15,9 @@ import lombok.*;
 public class PaymentInfo {
     @Id
     private String paymentId;
-    private TypeOfOrder productName;
+    private Integer productName;
     private Integer bill;
-    private String productID;
-    private TypeOfPaymentStatus paymentStatus;
+    private String ProductId;
+    private Integer paymentStatus;
 
 }

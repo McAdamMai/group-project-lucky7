@@ -6,13 +6,16 @@ import ca.mcmaster.cas735.acme.parking_management.dtos.ClientRawDto;
 import ca.mcmaster.cas735.acme.parking_management.dtos.OrderResDto;
 import ca.mcmaster.cas735.acme.parking_management.ports.PaymentIF;
 import ca.mcmaster.cas735.acme.parking_management.utils.IdGenerator;
+import ca.mcmaster.cas735.acme.parking_management.utils.UserStatus;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.hibernate.query.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
+@Slf4j
 @RestController
 @RequestMapping("/transponder")
 @RequiredArgsConstructor
@@ -37,6 +40,7 @@ public class TransponderRequestController {
             // 01 means transponder existed, please try renewal
             // 11 means order repeated
         } catch (Exception e) {
+            log.error(e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
         }
     }
@@ -62,16 +66,32 @@ public class TransponderRequestController {
         }
     }
 
-    @PostMapping("/deleteOrder")
+    @PostMapping("/deleteOrder/{orderID}") //change it to orderID
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public ResponseEntity<OrderResDto> deleteOrder(@RequestBody ClientRawDto clientRawDto) {
+    public ResponseEntity<String> deleteOrder(@PathVariable String orderID) {
         try{
-            OrderReqDto orderReqDto = addUUID(clientRawDto);
-            OrderResDto orderResDto = orderProcessor.processDeletion(orderReqDto);
-            if (orderResDto.isDuplicateOrderId()){
-                return ResponseEntity.status(HttpStatus.NO_CONTENT).body(orderResDto);
+            boolean resp = orderProcessor.processDeletion(orderID);
+            if (resp){
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).body("unpaid order deleted");
             }else {
-                return ResponseEntity.status(HttpStatus.CONFLICT).body(orderResDto);
+                return ResponseEntity.status(HttpStatus.CONFLICT).body("paid orders cannot be deleted!" );
+            }
+        }catch (Exception e){
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("no matched orders");
+        }
+    }
+
+    @PostMapping("/update/{macID}")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<UserStatus> updateUserInfo(@PathVariable String macID){
+        try{
+            UserStatus userStatus = orderProcessor.updateUserInfo(macID);
+            if (userStatus ==UserStatus.Valid){
+                return ResponseEntity.status(HttpStatus.OK).body(userStatus);
+            }else if(userStatus ==UserStatus.Expired){
+                return ResponseEntity.status(HttpStatus.ACCEPTED).body(userStatus);
+            }else{
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).body(userStatus);
             }
         }catch (Exception e){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
@@ -87,8 +107,10 @@ public class TransponderRequestController {
         orderReqDto.setOrderId(IdGenerator.generateUUID(macID+clientID));
         orderReqDto.setLicensePlate(clientRawDto.getLicensePlate());
         orderReqDto.setTransponderID(IdGenerator.generateUUID(macID));
+        orderReqDto.setTimeStamp(clientRawDto.getTimeStamp());
         orderReqDto.setTransponderType(clientRawDto.getTransponderType());
         orderReqDto.setPaymentMethod(clientRawDto.getPaymentMethod());
+        log.info(orderReqDto.toString());
         return orderReqDto;
     }
 }

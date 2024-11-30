@@ -7,11 +7,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class OrderResDto {
     private String transponderId;
+    private String orderId;
     private boolean duplicateOrderId;
     private boolean duplicateMacId;
 
-    public OrderResDto(String transponderID, boolean duplicateOrderId, boolean duplicateMacId) {
+    public OrderResDto(String transponderID, String orderId, boolean duplicateOrderId, boolean duplicateMacId) {
         this.transponderId = transponderID;
+        this.orderId = orderId;
         this.duplicateOrderId = duplicateOrderId;
         this.duplicateMacId = duplicateMacId;
     }

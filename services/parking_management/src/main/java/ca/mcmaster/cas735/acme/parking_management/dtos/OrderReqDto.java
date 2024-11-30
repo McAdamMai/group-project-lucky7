@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 @Data
-public class OrderReqDto {
+public class    OrderReqDto {
     private String macID;
     private String orderId; //UUID
     private String transponderID; //UUID

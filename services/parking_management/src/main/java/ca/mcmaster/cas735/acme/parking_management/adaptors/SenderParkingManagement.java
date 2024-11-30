@@ -37,7 +37,7 @@ public class SenderParkingManagement implements PaymentIF, Management2MacSystemI
 
     @Override
     public void updateTransponder(Management2MacDto management2MacDto){
-        rabbitTemplate.convertAndSend(outboundExchangeMac, "*mac",translate(management2MacDto));
+        rabbitTemplate.convertAndSend(outboundExchangeMac, "*manager2mac",translate(management2MacDto));
         log.info("update transponder to the external mac system: {}", management2MacDto);
     }
 

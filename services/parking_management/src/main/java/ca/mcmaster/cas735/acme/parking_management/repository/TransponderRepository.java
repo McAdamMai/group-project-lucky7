@@ -2,6 +2,7 @@ package ca.mcmaster.cas735.acme.parking_management.repository;
 
 import ca.mcmaster.cas735.acme.parking_management.model.TransponderInfo;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -12,13 +13,34 @@ public interface TransponderRepository extends JpaRepository<TransponderInfo,Str
     boolean existsByOrderID(String orderID);
     void deleteByOrderID(String orderID);
 
-    @Query(value = "UPDATE parking-transponder SET registerTime = :registerTime WHERE macID = :macID",
-    nativeQuery = true)
-    void updateTransponderRegisterTime(@Param("macID") String macID,
-                              @Param("registerTime") Long registerTime);//return the changed line
-
-    @Query(value = "UPDATE parking-transponder SET expireTime = :expireTime WHERE macID = :macID",
+    @Query(value = "Select expire_time FROM t_transponder WHERE macid = :value",
             nativeQuery = true)
-    void updateTransponderExpiryTime(@Param("macID") String macID,
-                                       @Param("expireTime") Long expireTime);//return the changed line
+    Long getExpireTimeByMacId( @Param("value") String value);
+
+    @Query(value = "Select expire_time FROM t_transponder WHERE orderid = :value",
+            nativeQuery = true)
+    Long getExpireTimeByOrderId( @Param("value") String value);
+
+    @Modifying //add modifying to indicate we are modifying data but not retrieving
+    @Query(value = "UPDATE t_transponder SET register_time = expire_time WHERE macid = :macid",
+    nativeQuery = true)
+    void updateTransponderRegisterTime(@Param("macid") String macid);//return the changed line
+
+    @Modifying
+    @Query(value = "UPDATE t_transponder SET register_time = :register_time WHERE macid = :macid",
+            nativeQuery = true)
+    void updateTransponderRegisterTimeEx(@Param("macid") String macid,
+                                         @Param("register_time") Long register_time);//return the changed line
+
+    @Modifying
+    @Query(value = "UPDATE t_transponder SET expire_time = :expire_time WHERE macid = :macid",
+            nativeQuery = true)
+    void updateTransponderExpiryTime(@Param("macid") String macid,
+                                       @Param("expire_time") Long expire_time);//return the changed line
+
+    @Modifying
+    @Query(value = "UPDATE t_transponder SET orderid = :orderid WHERE macid = :macid",
+    nativeQuery = true)
+    void updateTransponderOrderId(@Param("macid") String macid,
+                                  @Param("orderid") String orderid);
 }

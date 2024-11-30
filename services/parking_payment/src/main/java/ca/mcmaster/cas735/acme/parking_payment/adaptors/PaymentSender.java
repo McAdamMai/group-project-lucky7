@@ -23,7 +23,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PaymentSender implements Payment2MacSystemIF, PaymentRequest2BankIF, PaymentConfirmation2ManagementIF, PaymentConfirmation2GateMsgBusIF {
 
-    private final String paymentRequest = "Bank account: , Expire: , Code: ;";
+    private final String paymentRequest = "Bank account: test_account, PaymentId: ";
     private final RabbitTemplate rabbitTemplate; //new a rabbit template
     @Value("${app.messaging.outbound-exchange-Mac}") private String outboundExchangeMac; //outbound for mac
     @Value("${app.messaging.outbound-exchange-bank}") private  String outboundExchangeBank; //outbound for bank
@@ -31,7 +31,6 @@ public class PaymentSender implements Payment2MacSystemIF, PaymentRequest2BankIF
     @Value("${app.messaging.outbound-exchange-manager}") private  String outboundExchangeManager;
     @Value("${app.messaging.outbound-exchange-gate}") private  String outboundExchangeGate;
     @Value("${app.messaging.outbound-exchange-pos}") private String outboundExchangePos;
-
 
     //functions for UploadToMacSystemIF
     @Override
@@ -54,14 +53,15 @@ public class PaymentSender implements Payment2MacSystemIF, PaymentRequest2BankIF
 
     // functions for ReqToBankIF
     @Override
-    public void sendPaymentRequest(String info, Integer bill) {
-        String combined = paymentRequest + info + " bill: " + bill;
+    public void sendPaymentRequest(String paymentId, Integer bill) {
+        String msg = paymentRequest + paymentId + "Bill:" + bill;
         log.info("Sending a payment request to bank, amount to be paid is {}", bill);
-        rabbitTemplate.convertAndSend(outboundExchangeBank,"*bank", combined);
+        rabbitTemplate.convertAndSend(outboundExchangeBank,"*payment2bank", msg);
+        //
         Map<String, Object> response = new HashMap<>();
-        response.put("info", info);
+        response.put("paymentID",paymentId);
         response.put("ack", true);
-        rabbitTemplate.convertAndSend(inboundExchangeBank, "*bank", translate(response));
+        rabbitTemplate.convertAndSend(inboundExchangeBank, "*bank2payment", translate(response));
         // generate a confirmation for payment service, default value is true
     }
 

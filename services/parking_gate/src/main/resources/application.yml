@@ -32,8 +32,7 @@ app:
             qrTopic: qrcode
             buttonClickTopic: buttonClick
         messaging:
-            inbound-exchange-payment_ID: payment2gateConfirmation_msg
-            inbound-exchange-payment_confirmation: payment2gateID_msg
+            inbound-exchange-payment: payment2gate_msg
             outbound-exchange-payment: gate2payment_msg
 
 management:

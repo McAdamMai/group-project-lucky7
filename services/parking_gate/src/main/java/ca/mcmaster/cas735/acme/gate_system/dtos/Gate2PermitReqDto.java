@@ -12,5 +12,6 @@ import java.math.BigInteger;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Gate2PermitReqDto {
-    private BigInteger transponderId;
+    private Long transponderId;
+    private String gateId;
 }

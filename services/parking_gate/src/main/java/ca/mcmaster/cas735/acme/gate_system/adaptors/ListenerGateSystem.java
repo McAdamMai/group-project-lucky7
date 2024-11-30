@@ -1,9 +1,15 @@
 package ca.mcmaster.cas735.acme.gate_system.adaptors;
 
 import ca.mcmaster.cas735.acme.gate_system.business.GateService;
+import ca.mcmaster.cas735.acme.gate_system.dtos.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.rabbit.annotation.Exchange;
+import org.springframework.amqp.rabbit.annotation.Queue;
+import org.springframework.amqp.rabbit.annotation.QueueBinding;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,6 +26,8 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigInteger;
 
+import ca.mcmaster.cas735.acme.gate_system.utils.GateSystemUtils;
+
 @Service
 @Slf4j
 public class ListenerGateSystem {
@@ -35,8 +43,16 @@ public class ListenerGateSystem {
     @Value("${app.custom.mqtt.buttonClickTopic}")
     private String buttonClickTopic;
 
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
     @Autowired
     private GateService gateService;
+
+    private GateSystemUtils gateSystemUtils;
+
+    private SenderGateSystem senderGateSystem;
 
     @Bean
     @ServiceActivator(inputChannel = "mqttTransponderInputChannel")
@@ -50,13 +66,15 @@ public class ListenerGateSystem {
 
                 // Extract variables
                 String transponderNumber = jsonNode.get("transponderNumber").asText();
-                String isExit = jsonNode.get("isExit").asText();
+                String gateNumber = jsonNode.get("gateNumber").asText();
 
                 System.out.println("Received transponder number: " + transponderNumber);
-                System.out.println("Received isExit: " + isExit);
+                System.out.println("Received gateNumber: " + gateNumber);
 
                 // Call gate service with extracted variables
-                gateService.enterExitParkingLotWithTransponder(new BigInteger(transponderNumber), isExit.equals("true"));
+                senderGateSystem.sendValidationRequest(Gate2PermitReqDto.builder()
+                        .transponderId(Long.parseLong(transponderNumber))
+                        .gateId(gateNumber).build());
             } catch (Exception e) {
                 System.err.println("Error parsing MQTT message payload: " + e.getMessage());
             }
@@ -75,13 +93,13 @@ public class ListenerGateSystem {
 
                 // Extract variables
                 Long qrCode = Long.parseLong(jsonNode.get("qrCode").asText());
-                String isExit = jsonNode.get("isExit").asText();
+                String gate = jsonNode.get("gate").asText();
 
                 System.out.println("Received qrCode: " + qrCode);
-                System.out.println("Received isExit: " + isExit);
+                System.out.println("Received gate: " + gate);
 
                 // Call gate service with extracted variables
-                gateService.exitParkingLotWithQR(qrCode);
+                gateService.enterExitParkingLotWithQR(qrCode, gate);
             } catch (Exception e) {
                 System.err.println("Error parsing MQTT message payload: " + e.getMessage());
             }
@@ -98,11 +116,12 @@ public class ListenerGateSystem {
                 JsonNode jsonNode = objectMapper.readTree(payload);
 
                 String licensePlate = jsonNode.get("licensePlate").asText();
+                String gate = jsonNode.get("gate").asText();
 
                 System.out.println("Received licensePlate: " + licensePlate);
 
                 // Call gate service to generate QR code
-                gateService.enterParkingLotWithoutTransponder(licensePlate);
+                gateService.enterParkingLotWithoutTransponder(licensePlate, gate);
             } catch (Exception e) {
                 System.err.println("Error processing button click event: " + e.getMessage());
             }
@@ -156,4 +175,34 @@ public class ListenerGateSystem {
         adapter.setOutputChannel(channel);
         return adapter;
     }
+
+// AMQP listener
+    @RabbitListener(queues = "transponder_req.queue")
+    public void listenValidTransponder(String message){
+        System.out.println(message);
+        log.info("receive message from gate_req.queue, {}", message);
+        Permit2GateResDto permit2GateResDto = gateSystemUtils.translate(message, Permit2GateResDto.class);
+        gateService.enterExitParkingLotWithTransponder(permit2GateResDto.getLicensePlate(), permit2GateResDto.getGateId());
+    }
+
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(value = "payment_req.queue" , durable = "true"),
+            exchange = @Exchange(value = "${app.custom.messaging.inbound-exchange-payment}",
+            ignoreDeclarationExceptions = "true", type = "topic"),
+            key = "*payment2gate"))
+    public void listenPaymentConfirmation(String message){
+        System.out.println(message);
+        log.info("receive message from gate_req.queue, {}", message);
+        Payment2GateResDto payment2GateResDto = gateSystemUtils.translate(message, Payment2GateResDto.class);
+        gateService.exitingCar(payment2GateResDto);
+    }
+
+    @RabbitListener(queues = "charges_req.queue")
+    public void listenCharges(String message){
+        System.out.println(message);
+        log.info("receive message from gate_req.queue, {}", message);
+        Enforcement2GateResDto enforcement2GateResDto = gateSystemUtils.translate(message, Enforcement2GateResDto.class);
+        gateService.addCharges(enforcement2GateResDto);
+    }
+
 }
