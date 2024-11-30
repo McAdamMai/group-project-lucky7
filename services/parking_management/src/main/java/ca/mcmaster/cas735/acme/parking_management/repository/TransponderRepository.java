@@ -11,6 +11,7 @@ public interface TransponderRepository extends JpaRepository<TransponderInfo,Str
     TransponderInfo findByMacID(String macID); //additional method to find by macID
     boolean existsByMacID(String macID);
     boolean existsByOrderID(String orderID);
+    boolean existsByTransponderID(String transponderID);
     void deleteByOrderID(String orderID);
 
     @Query(value = "Select expire_time FROM t_transponder WHERE macid = :value",
@@ -20,6 +21,14 @@ public interface TransponderRepository extends JpaRepository<TransponderInfo,Str
     @Query(value = "Select expire_time FROM t_transponder WHERE orderid = :value",
             nativeQuery = true)
     Long getExpireTimeByOrderId( @Param("value") String value);
+
+    @Query(value = "Select expire_time FROM t_transponder WHERE transponderid = :value",
+            nativeQuery = true)
+    Long getExpireTimeByOrderTId( @Param("value") String value);
+
+    @Query(value = "Select license_plate FROM t_transponder WHERE transponderid = :value",
+        nativeQuery = true)
+    String getLicensePlateByOrderTId( @Param("value") String value);
 
     @Modifying //add modifying to indicate we are modifying data but not retrieving
     @Query(value = "UPDATE t_transponder SET register_time = expire_time WHERE macid = :macid",

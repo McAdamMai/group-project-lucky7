@@ -1,5 +1,6 @@
 package ca.mcmaster.cas735.acme.parking_management.business;
 
+import ca.mcmaster.cas735.acme.parking_management.dtos.Gate2PermitReqDto;
 import ca.mcmaster.cas735.acme.parking_management.dtos.OrderReqDto;
 import ca.mcmaster.cas735.acme.parking_management.dtos.OrderResDto;
 import ca.mcmaster.cas735.acme.parking_management.dtos.Payment2ManagementDto;
@@ -11,4 +12,6 @@ public interface OrderProcessorIF {
     boolean processDeletion(String orderId);
     void processPayment(Payment2ManagementDto payment2ManagementDto);
     UserStatus updateUserInfo(String MacId);
+    void processGateRequest(Gate2PermitReqDto gate2PermitReqDto);
+
 }

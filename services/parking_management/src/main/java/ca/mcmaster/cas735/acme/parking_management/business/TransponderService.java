@@ -2,6 +2,7 @@ package ca.mcmaster.cas735.acme.parking_management.business;
 
 import ca.mcmaster.cas735.acme.parking_management.dtos.*;
 import ca.mcmaster.cas735.acme.parking_management.model.TransponderInfo;
+import ca.mcmaster.cas735.acme.parking_management.ports.Management2GateIF;
 import ca.mcmaster.cas735.acme.parking_management.ports.Management2MacSystemIF;
 import ca.mcmaster.cas735.acme.parking_management.ports.PaymentIF;
 import ca.mcmaster.cas735.acme.parking_management.repository.TransponderRepository;
@@ -21,6 +22,7 @@ public class TransponderService implements OrderProcessorIF {
     private final TransponderRepository transponderRepository;
     private final PaymentIF paymentIF;
     private final Management2MacSystemIF management2MacSystemIF;
+    private final Management2GateIF management2GateIF;
 
     @Override
     public UserStatus updateUserInfo(String macId){
@@ -121,6 +123,22 @@ public class TransponderService implements OrderProcessorIF {
         }else{
             log.error("Order not found!!!");
         }
+    }
+
+    @Override
+    public void processGateRequest(Gate2PermitReqDto gate2PermitReqDto){
+        Permit2GateResDto permit2GateResDto = new Permit2GateResDto();
+        permit2GateResDto.setGateId(gate2PermitReqDto.getGateId()); //set the gate
+        String transponderId = gate2PermitReqDto.getTransponderId();
+        if(transponderRepository.existsByTransponderID(transponderId) &&
+                transponderRepository.getExpireTimeByOrderTId(transponderId) < System.currentTimeMillis()){
+            permit2GateResDto.setIsVerified(true);
+            permit2GateResDto.setLicensePlate(transponderRepository.getLicensePlateByOrderTId(transponderId));
+        }else {
+            permit2GateResDto.setIsVerified(false);
+            permit2GateResDto.setLicensePlate("");
+        }
+        management2GateIF.update2gate(permit2GateResDto);
     }
 
     private TransponderInfo translate2Transponder(OrderReqDto orderReqDto) {

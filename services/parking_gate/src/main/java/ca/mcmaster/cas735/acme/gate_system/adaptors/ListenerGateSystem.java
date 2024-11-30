@@ -177,7 +177,11 @@ public class ListenerGateSystem {
     }
 
 // AMQP listener
-    @RabbitListener(queues = "transponder_req.queue")
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(value = "transponder_res.queue", durable = "true"),
+            exchange = @Exchange(value = "manager2gate",
+            ignoreDeclarationExceptions = "true", type = "topic"),
+            key = "*manager2gate"))
     public void listenValidTransponder(String message){
         System.out.println(message);
         log.info("receive message from gate_req.queue, {}", message);
