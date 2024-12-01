@@ -24,7 +24,7 @@ server:
 
 app:
     messaging:
-      inbound-exchange-enforcement: enforcement_msg
+      inbound-exchange-enforcement: enforcement2payment_msg
       inbound-exchange-gate: gate2payment_msg
       inbound-exchange-manager: manager2payment_msg
       inbound-exchange-bank: in_bank_msg
