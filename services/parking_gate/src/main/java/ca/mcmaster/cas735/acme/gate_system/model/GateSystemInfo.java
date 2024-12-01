@@ -15,7 +15,7 @@ import java.math.BigDecimal;
 
 // Need to add @Document(value = "product"), but for a JPA
 @Entity
-@Table(name = "t_gate_parking", uniqueConstraints = {
+@Table(name = "t_gate", uniqueConstraints = {
         @UniqueConstraint(columnNames = "licensePlate"),
 })
 @AllArgsConstructor

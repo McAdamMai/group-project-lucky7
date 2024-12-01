@@ -1,9 +1,11 @@
 package ca.mcmaster.cas735.acme.gate_system.adaptors;
 
+import ca.mcmaster.cas735.acme.gate_system.GateSystemApplication;
 import ca.mcmaster.cas735.acme.gate_system.business.GateService;
 import ca.mcmaster.cas735.acme.gate_system.dtos.*;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
@@ -30,6 +32,7 @@ import ca.mcmaster.cas735.acme.gate_system.utils.GateSystemUtils;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class ListenerGateSystem {
 
     @Value("${app.custom.mqtt.host}")
@@ -52,7 +55,7 @@ public class ListenerGateSystem {
 
     //private GateSystemUtils gateSystemUtils;
 
-    private SenderGateSystem senderGateSystem;
+    private final SenderGateSystem senderGateSystem;
 
     @Bean
     @ServiceActivator(inputChannel = "mqttTransponderInputChannel")
@@ -72,8 +75,12 @@ public class ListenerGateSystem {
                 System.out.println("Received gateNumber: " + gateNumber);
 
                 // Call gate service with extracted variables
+                Gate2PermitReqDto gate2PermitReqDto = Gate2PermitReqDto.builder()
+                        .transponderId(transponderNumber)
+                        .gateId(gateNumber).build();
+                log.info("new obj {}",gate2PermitReqDto);
                 senderGateSystem.sendValidationRequest(Gate2PermitReqDto.builder()
-                        .transponderId(Long.parseLong(transponderNumber))
+                        .transponderId(transponderNumber)
                         .gateId(gateNumber).build());
             } catch (Exception e) {
                 System.err.println("Error parsing MQTT message payload: " + e.getMessage());

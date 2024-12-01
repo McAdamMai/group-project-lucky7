@@ -53,8 +53,8 @@ public class SenderGateSystem implements GateIF {
         //MessageProperties messageProperties = new MessageProperties();
         //Message message = new Message(gateSystemUtils.translateToBytes(gate2PermitReqDto), messageProperties);
         // Send the request message to the validationRequestQueue
-        rabbitTemplate.convertAndSend(VALIDATION_TRANSPONDER_REQUEST_QUEUE, translate(gate2PermitReqDto));
-        log.info("Sent validation request for transponder: {}", gate2PermitReqDto.getTransponderId());
+        rabbitTemplate.convertAndSend(VALIDATION_TRANSPONDER_REQUEST_QUEUE, "*gate2manager",translate(gate2PermitReqDto));
+        log.info("Sent validation request for transponder: {}", gate2PermitReqDto);
     }
     @Bean
     public TopicExchange outboundManagement() {

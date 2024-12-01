@@ -39,9 +39,9 @@ public class ListenerParkingManagement {
             ignoreDeclarationExceptions = "true", type = "topic"),
             key = "*gate2manager"
         ))
-    public void listenGate(byte[] message, @Header(AmqpHeaders.CONSUMER_QUEUE) String queue){
+    public void listenGate(String message, @Header(AmqpHeaders.CONSUMER_QUEUE) String queue){
         log.info("receive message from {}, {}", queue, message);
-        orderProcessor.processGateRequest(byteTranslate(message, Gate2PermitReqDto.class));
+        orderProcessor.processGateRequest(translate(message, Gate2PermitReqDto.class));
     }
     //listener for others
     //...

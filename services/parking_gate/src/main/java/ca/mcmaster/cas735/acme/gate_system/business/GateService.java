@@ -70,10 +70,10 @@ public class GateService {
                     .isVisitor(false)
                     .build());
             // update availability of parking spots
-            senderGateSystem.sendAvailabilities(Gate2AvailabilityResDto.builder()
+            /*senderGateSystem.sendAvailabilities(Gate2AvailabilityResDto.builder()
                     .licensePlate(licensePlate)
                     .entryTime(System.currentTimeMillis())
-                    .typeOfClient(TypeOfClient.PAYPERHOUR).build());
+                    .typeOfClient(TypeOfClient.PAYPERHOUR).build());*/
         } else {
             log.error("Invalid gate: {}", gate);
         }
