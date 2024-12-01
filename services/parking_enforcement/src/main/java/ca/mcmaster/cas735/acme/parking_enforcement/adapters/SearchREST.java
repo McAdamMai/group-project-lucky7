@@ -15,6 +15,10 @@ public class SearchREST {
     @Value("${search.url}")
     private String searchRequestUrl;
 
+    public SearchREST() {
+        this(null);
+    }
+
     public SearchREST(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }

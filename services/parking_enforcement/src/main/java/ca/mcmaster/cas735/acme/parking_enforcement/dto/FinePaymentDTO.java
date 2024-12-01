@@ -6,9 +6,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class FinePaymentDTO {
-    String macID;
-    String licensePlate;
-    Integer bill;
-    Integer timeStamp;
-    String fineReason;
+    private String macID;
+    private String licensePlate;
+    private Integer bill;
+    private Long timeStamp;
+    private String fineReason;
 }

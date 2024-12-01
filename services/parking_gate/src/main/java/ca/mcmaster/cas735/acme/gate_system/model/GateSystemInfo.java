@@ -26,7 +26,7 @@ public class GateSystemInfo {
     @Id
     private String licensePlate;
     private Long QRCode;
-    private BigDecimal charge;
+    private Integer charge; // unit is cent
     private String fineReason;
     private Boolean isVisitor;
     private Long entryTime;

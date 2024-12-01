@@ -1,4 +1,4 @@
-package ca.mcmaster.cas735.acme.parking_receiver;
+package ca.mcmaster.cas735.acme.parking_enforcement;
 
 import org.springframework.amqp.core.*;
 import org.springframework.context.annotation.Bean;

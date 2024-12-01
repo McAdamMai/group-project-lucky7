@@ -6,6 +6,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class FineGateDTO {
-    String license;
-    Integer bill;
+    private String license;
+    private Integer bill;
 }

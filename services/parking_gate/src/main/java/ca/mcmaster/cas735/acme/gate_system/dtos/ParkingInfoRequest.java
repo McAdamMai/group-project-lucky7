@@ -13,7 +13,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 public class ParkingInfoRequest {
     private String licensePlate;
-    private BigDecimal charge;
+    private Integer charge;
     private Boolean isVisitor;
     private Long entryTime;
 }

@@ -1,5 +1,6 @@
 package ca.mcmaster.cas735.acme.parking_availability.business;
 
+import ca.mcmaster.cas735.acme.parking_availability.dto.MonitorRequestDTO;
 import lombok.extern.slf4j.Slf4j;
 import ca.mcmaster.cas735.acme.parking_availability.dto.ResponseDTO;
 import ca.mcmaster.cas735.acme.parking_availability.dto.RequestDTO;
@@ -28,7 +29,7 @@ public class AvailabilityService implements CheckSpace, Monitor {
     }
 
     @Override
-    public void monitor(MonitorRequestDTO request) {
+    public void send2monitor(MonitorRequestDTO request) {
         System.out.println("Display monitor: " + request.getReq());
     }
 }

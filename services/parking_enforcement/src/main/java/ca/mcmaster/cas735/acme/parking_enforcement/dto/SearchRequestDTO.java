@@ -6,5 +6,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class SearchRequestDTO {
-    String license;
+    private String license;
 }

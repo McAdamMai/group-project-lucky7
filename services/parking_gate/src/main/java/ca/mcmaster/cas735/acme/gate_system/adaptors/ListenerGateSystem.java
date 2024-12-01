@@ -186,7 +186,10 @@ public class ListenerGateSystem {
         System.out.println(message);
         log.info("receive message from gate_req.queue, {}", message);
         Permit2GateResDto permit2GateResDto = GateSystemUtils.translate(message, Permit2GateResDto.class);
-        gateService.enterExitParkingLotWithTransponder(permit2GateResDto.getLicensePlate(), permit2GateResDto.getGateId());
+        if (permit2GateResDto.getIsVerified()) {
+            gateService.enterExitParkingLotWithTransponder(permit2GateResDto.getLicensePlate(), permit2GateResDto.getGateId());
+        }
+        //else{}
     }
 
     @RabbitListener(bindings = @QueueBinding(

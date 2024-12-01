@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class MemberDTO {
-    String license;
-    String macID;
-    boolean found;
+    private String license;
+    private String macID;
+    private Boolean found;
 }

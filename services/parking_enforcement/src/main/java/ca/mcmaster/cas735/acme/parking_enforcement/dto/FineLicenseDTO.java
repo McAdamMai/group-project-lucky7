@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class FineLicenseDTO {
-    String timeStamp;
-    String license;
-    String reason;
+    private Long timeStamp;
+    private String license;
+    private String reason;
 }

@@ -2,11 +2,12 @@ package ca.mcmaster.cas735.acme.parking_enforcement.business;
 
 import ca.mcmaster.cas735.acme.parking_enforcement.adapters.SearchREST;
 import ca.mcmaster.cas735.acme.parking_enforcement.dto.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import ca.mcmaster.cas735.acme.parking_enforcement.dto.SearchRequestDTO;
 import ca.mcmaster.cas735.acme.parking_enforcement.ports.FineFilter;
-import ca.mcmaster.cas735.acme.parking_enforcement.ports.FinePayment;
-import ca.mcmaster.cas735.acme.parking_enforcement.ports.FineGate;
+import ca.mcmaster.cas735.acme.parking_enforcement.ports.SendFine2GateIF;
+import ca.mcmaster.cas735.acme.parking_enforcement.ports.SendFine2PaymentIF;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageProperties;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -18,7 +19,7 @@ import org.springframework.stereotype.Service;
 import java.util.UUID;
 
 @Service @Slf4j
-public class EnforcementSystemService implements FineFilter, FineGate, FinePayment {
+public class EnforcementSystemService implements FineFilter, SendFine2GateIF, SendFine2PaymentIF {
     @Autowired
     private RabbitTemplate rabbitTemplate;
     
@@ -35,12 +36,12 @@ public class EnforcementSystemService implements FineFilter, FineGate, FinePayme
 
     @Override
     public void sendFine(String message) {
-        String license = new String(message.getBody());
-        FineLicenseDTO fineLicense = translateLicense(license);
+        String license = message;
+        FineLicenseDTO fineLicense = translateLicense(license); //msg to LicenseDTO
         SearchRequestDTO request = new SearchRequestDTO();
         request.setLicense(fineLicense.getLicense());
         MemberDTO member = searchRest.lookupByMemberId(request);
-        if (member.getFound()) {
+        if (member.getFound()) { //
             FinePaymentDTO fineP = new FinePaymentDTO();
             fineP.setMacID(member.getMacID());
             fineP.setLicensePlate(fineLicense.getLicense());
@@ -61,7 +62,7 @@ public class EnforcementSystemService implements FineFilter, FineGate, FinePayme
         // Send the request message to the validationRequestQueue
         rabbitTemplate.convertAndSend(FINE_PAYMENT_QUEUE, fine);
 
-        System.out.println("Sent fine to payment for license: " + fine.getLicense());
+        System.out.println("Sent fine to payment for license: " + fine.getLicensePlate());
     }
 
     @Override

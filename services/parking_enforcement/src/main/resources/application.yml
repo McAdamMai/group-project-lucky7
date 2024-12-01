@@ -12,7 +12,7 @@ logging.level:
     business: INFO
 
 server:
-  port: 9081
+  port: 9082
 
 app:
   custom:

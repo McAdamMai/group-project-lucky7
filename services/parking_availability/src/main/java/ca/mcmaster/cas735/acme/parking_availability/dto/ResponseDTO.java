@@ -6,7 +6,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class ResponseDTO {
-    private boolean status;
+    private Boolean status;
 
     public ResponseDTO(boolean status) {
         this.status = status;
