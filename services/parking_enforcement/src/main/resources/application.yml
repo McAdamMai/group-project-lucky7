@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: parking-enforcement
+
+  rabbitmq:
+    username: admin
+    password: cas735
+
+logging.level:
+  ca.mcmaster.cas735.tmt.parking_enforcement:
+    adapter:  INFO # DEBUG for fine-grained trace
+    business: INFO
+
+server:
+  port: 9081
+
+app:
+  custom:
+    mqtt:
+      port: 1884
+      topic: acme_parking_enforcement
+    messaging:
+      inbound-exchange-topic: license.filter
+      outbound-exchange-topic: scanner
+  messaging:
+    exchanges:
+      mainExchange: enforcement_msg
+      secondaryExchange: gate_msg
+
+management:
+  info:
+    env:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: info,health
+      base-path: /actuator
+
+info:
+  application:
+    description: '@project.description@'
+    version:     '@project.version@'
+
+eureka:
+  client:
+    healthcheck:
+      enabled: true
+
+search:
+  url: http://localhost:9080

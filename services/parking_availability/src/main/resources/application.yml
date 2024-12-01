@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: parking-availability
+
+  rabbitmq:
+    username: admin
+    password: cas735
+
+logging.level:
+  ca.mcmaster.cas735.tmt.parking_availability:
+    adapter:  INFO # DEBUG for fine-grained trace
+    business: INFO
+
+server:
+  port: 8080
+  servlet:
+    context-path: /member-service
+
+app:
+  custom:
+    messaging:
+      inbound-exchange-topic: monitor-req
+      outbound-exchange-topic: monitor
+
+management:
+  info:
+    env:
+      enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: info,health
+      base-path: /actuator
+
+info:
+  application:
+    description: '@project.description@'
+    version:     '@project.version@'
+
+eureka:
+  client:
+    healthcheck:
+      enabled: true
