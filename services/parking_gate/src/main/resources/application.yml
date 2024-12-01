@@ -7,7 +7,7 @@ spring:
         password: cas735
     datasource:
         driver-class-name: com.mysql.cj.jdbc.Driver
-        url: jdbc:mysql://localhost:3306/parking-transponder
+        url: jdbc:mysql://localhost:3306/parking-gate
         username: root
         password: mzh1501130304
     jpa:
@@ -21,7 +21,7 @@ logging.level:
         business: INFO
 
 server:
-    port: 9080
+    port: 9081
 
 app:
     custom:
@@ -33,7 +33,8 @@ app:
             buttonClickTopic: buttonClick
         messaging:
             inbound-exchange-payment: payment2gate_msg
-            inbound-exchange-gate: manager2gate_msg
+            inbound-exchange-management: manager2gate_msg
+            inbound-exchange-enforcement: enforcement2gate_msg
             outbound-exchange-payment: gate2payment_msg
             outbound-exchange-management: gate2manager_msg
 

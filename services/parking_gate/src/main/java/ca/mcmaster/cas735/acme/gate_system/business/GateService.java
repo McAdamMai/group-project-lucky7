@@ -1,7 +1,6 @@
 package ca.mcmaster.cas735.acme.gate_system.business;
 
 import ca.mcmaster.cas735.acme.gate_system.adaptors.SenderGateSystem;
-import ca.mcmaster.cas735.acme.gate_system.controller.GateController;
 import ca.mcmaster.cas735.acme.gate_system.dtos.*;
 import ca.mcmaster.cas735.acme.gate_system.model.GateSystemInfo;
 import ca.mcmaster.cas735.acme.gate_system.ports.GateIF;
@@ -21,13 +20,11 @@ import java.util.concurrent.TimeUnit;
 public class GateService {
     private final boolean isFull = false;
     private final GateSystemRepository gateSystemRepository;
-    private final GateController gateController;
     private final GateIF gateIF;
     private final SenderGateSystem senderGateSystem;
 
     private static final Set<String> exitGates = new HashSet<>(Arrays.asList("EXIT12345", "EXIT54321", "EXIT67890"));
     private static final Set<String> entryGates = new HashSet<>(Arrays.asList("ENTRY12345", "ENTRY54321", "ENTRY67890"));
-
 
     public void saveTransponder(ParkingInfoRequest parkingInfoRequest) {
         GateSystemInfo gateSystemInfo = GateSystemInfo.builder()
@@ -136,8 +133,6 @@ public class GateService {
         }
     }
 
-
-
     public Gate2PaymentReqDto computeParkingPrice(Long QRCode) {
         GateSystemInfo gateSystemInfo = gateSystemRepository.findByQRCode(QRCode);
         if (gateSystemInfo == null) {
@@ -182,7 +177,7 @@ public class GateService {
         }
         gateSystemInfo.setCharge(BigDecimal.valueOf(enforcement2GateResDto.getBill()));
         gateSystemInfo.setFineReason(enforcement2GateResDto.getFineReason());
-        gateSystemRepository.updateGateSystemInfo(gateSystemInfo);
+        //gateSystemRepository.updateGateSystemInfo(gateSystemInfo);
         log.info("Car {} is charged", gateSystemInfo.getLicensePlate());
     }
 
@@ -211,7 +206,6 @@ public class GateService {
         }
     }
 
-
     public Long createVisitorPass(String licensePlate) {
         Long qrCode = generateQRCode();
         GateSystemInfo gateSystemInfo = GateSystemInfo.builder()
@@ -224,8 +218,5 @@ public class GateService {
         gateSystemRepository.save(gateSystemInfo);
         log.info("Visitor pass created for car {}", licensePlate);
         return qrCode;
-
-
-
     }
 }

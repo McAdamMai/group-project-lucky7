@@ -50,7 +50,7 @@ public class ListenerGateSystem {
     @Autowired
     private GateService gateService;
 
-    private GateSystemUtils gateSystemUtils;
+    //private GateSystemUtils gateSystemUtils;
 
     private SenderGateSystem senderGateSystem;
 
@@ -179,13 +179,13 @@ public class ListenerGateSystem {
 // AMQP listener
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(value = "transponder_res.queue", durable = "true"),
-            exchange = @Exchange(value = "manager2gate",
+            exchange = @Exchange(value = "${app.custom.messaging.outbound-exchange-management}",
             ignoreDeclarationExceptions = "true", type = "topic"),
             key = "*manager2gate"))
     public void listenValidTransponder(String message){
         System.out.println(message);
         log.info("receive message from gate_req.queue, {}", message);
-        Permit2GateResDto permit2GateResDto = gateSystemUtils.translate(message, Permit2GateResDto.class);
+        Permit2GateResDto permit2GateResDto = GateSystemUtils.translate(message, Permit2GateResDto.class);
         gateService.enterExitParkingLotWithTransponder(permit2GateResDto.getLicensePlate(), permit2GateResDto.getGateId());
     }
 
@@ -197,15 +197,19 @@ public class ListenerGateSystem {
     public void listenPaymentConfirmation(String message){
         System.out.println(message);
         log.info("receive message from gate_req.queue, {}", message);
-        Payment2GateResDto payment2GateResDto = gateSystemUtils.translate(message, Payment2GateResDto.class);
+        Payment2GateResDto payment2GateResDto = GateSystemUtils.translate(message, Payment2GateResDto.class);
         gateService.exitingCar(payment2GateResDto);
     }
 
-    @RabbitListener(queues = "charges_req.queue")
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(value = "charges_req.queue" , durable = "true"),
+            exchange = @Exchange(value = "${app.custom.messaging.inbound-exchange-enforcement}",
+                    ignoreDeclarationExceptions = "true", type = "topic"),
+            key = "*enforcement2gate"))
     public void listenCharges(String message){
         System.out.println(message);
         log.info("receive message from gate_req.queue, {}", message);
-        Enforcement2GateResDto enforcement2GateResDto = gateSystemUtils.translate(message, Enforcement2GateResDto.class);
+        Enforcement2GateResDto enforcement2GateResDto = GateSystemUtils.translate(message, Enforcement2GateResDto.class);
         gateService.addCharges(enforcement2GateResDto);
     }
 

@@ -25,6 +25,4 @@ public class GateController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Payment failed: " + e.getMessage());
         }
     }
-
-
 }

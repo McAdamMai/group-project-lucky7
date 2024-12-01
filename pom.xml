@@ -15,10 +15,11 @@
         <!-- Infrastructure services -->
         <module>infrastructure/service_registry</module>
         <!-- Business Services -->
-        <module>services/parking_receiver</module>
         <module>services/parking_payment</module>
         <module>services/parking_management</module>
         <module>services/parking_gate</module>
+        <module>services/parking_enforcement</module>
+        <module>services/parking_availability</module>
     </modules>
 
 </project>
