@@ -200,7 +200,7 @@ public class ListenerGateSystem {
     }
 
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(value = "payment_req.queue" , durable = "true"),
+            value = @Queue(value = "payment2gate.queue" , durable = "true"),
             exchange = @Exchange(value = "${app.custom.messaging.inbound-exchange-payment}",
             ignoreDeclarationExceptions = "true", type = "topic"),
             key = "*payment2gate"))

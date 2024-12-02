@@ -1,6 +1,7 @@
 package ca.mcmaster.cas735.acme.parking_availability.adapters;
 
-import ca.mcmaster.cas735.acme.parking_availability.dto.MonitorRespDTO;
+import ca.mcmaster.cas735.acme.parking_availability.dto.*;
+import ca.mcmaster.cas735.acme.parking_availability.ports.AddSale;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.TopicExchange;
@@ -9,33 +10,55 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import ca.mcmaster.cas735.acme.parking_availability.dto.ResponseDTO;
 
 import java.io.IOException;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class AMQPSender {
+public class AMQPSender implements AddSale {
     private final RabbitTemplate rabbitTemplate;
     @Value("${app.custom.messaging.outbound-exchange-gate}") private String outboundExchangeGate;
-    @Value("${app.custom.messaging.outbount-exchange-monitor}") private String outboundExchangeMonitor;
+    @Value("${app.custom.messaging.outbound-exchange-monitor}") private String outboundExchangeMonitor;
+    @Value("${app.custom.messaging.outbound-exchange-payment}") private String outboundExchangePayment;
+    @Value("${app.custom.messaging.outbound-exchange-management}") private String outboundExchangeManagement;
 
     public void sendToGate(ResponseDTO res) {
         rabbitTemplate.convertAndSend(outboundExchangeGate, "*availability2gate",translate(res));
         log.info("send payment request to the parking_payment service: {}", res);
     }
-
     @Bean
-    public TopicExchange outboundPayment() {
+    public TopicExchange outboundGate() {
         // this will create the outbound exchange if it does not exist
         return new TopicExchange(outboundExchangeGate);
     }
 
+    // req to payment
+    @Override
+    public void request2Payment(AvailabilityRequest availabilityRequest) {
+        log.info("sending req to payment {}", availabilityRequest);
+        rabbitTemplate.convertAndSend(outboundExchangePayment, "*avl2payment",translate(availabilityRequest));
+    }
+    @Bean
+    public TopicExchange outboundPayment() {
+        return new TopicExchange(outboundExchangePayment);
+    }
+
+    // req to management
+    @Override
+    public void request2Management(AvailabilityRequest availabilityRequest) {
+        log.info("sending req to manage {}", availabilityRequest);
+        rabbitTemplate.convertAndSend(outboundExchangeManagement, "*avl2management",translate(availabilityRequest));
+    }
+    @Bean
+    public TopicExchange outboundManagement() {
+        return new TopicExchange(outboundExchangeManagement);
+    }
+
     //send to external system
-    public void sendToMonitor(MonitorRespDTO monitorResp) {
-        log.info("send response {} to {}", monitorResp,outboundExchangeMonitor);
-        rabbitTemplate.convertAndSend(outboundExchangeMonitor, monitorResp);
+    public void sendToMonitor(AvailabilityRequest availabilityRequest) {
+        log.info("send response {} to {}", availabilityRequest,outboundExchangeMonitor);
+        rabbitTemplate.convertAndSend(outboundExchangeMonitor, "*avl2monitor",translate(availabilityRequest));
     }
     @Bean
     public TopicExchange outboundMonitor() {

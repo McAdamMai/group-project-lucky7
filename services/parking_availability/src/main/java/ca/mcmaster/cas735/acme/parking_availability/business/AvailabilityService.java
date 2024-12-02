@@ -2,7 +2,6 @@ package ca.mcmaster.cas735.acme.parking_availability.business;
 
 import lombok.extern.slf4j.Slf4j;
 import ca.mcmaster.cas735.acme.parking_availability.adapters.AMQPSender;
-import ca.mcmaster.cas735.acme.parking_availability.model.LotInfo;
 import ca.mcmaster.cas735.acme.parking_availability.repository.LotRepository;
 import ca.mcmaster.cas735.acme.parking_availability.model.LogInfo;
 import ca.mcmaster.cas735.acme.parking_availability.repository.LogRepository;
@@ -11,7 +10,7 @@ import ca.mcmaster.cas735.acme.parking_availability.repository.SalesRepository;
 import ca.mcmaster.cas735.acme.parking_availability.dto.ResponseDTO;
 import ca.mcmaster.cas735.acme.parking_availability.dto.RequestDTO;
 import ca.mcmaster.cas735.acme.parking_availability.dto.MonitorRequestDTO;
-import ca.mcmaster.cas735.acme.parking_availability.dto.BillDTO;
+import ca.mcmaster.cas735.acme.parking_availability.dto.Payment2AvailDTO;
 import ca.mcmaster.cas735.acme.parking_availability.ports.CheckSpace;
 import ca.mcmaster.cas735.acme.parking_availability.ports.Monitor;
 import ca.mcmaster.cas735.acme.parking_availability.ports.AddSale;
@@ -20,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
-import java.util.UUID;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -30,7 +28,7 @@ import java.util.stream.Collectors;
 
 
 @Service @Slf4j
-public class AvailabilityService implements CheckSpace, Monitor, AddSale {
+public class AvailabilityService implements CheckSpace, Monitor {
 
     private final SalesRepository salesRepo;
     private final LogRepository logRepo;
@@ -80,13 +78,13 @@ public class AvailabilityService implements CheckSpace, Monitor, AddSale {
         String lotID = request.getLot();
         List<Long> times = logRepo.findAllEntryTimes(lotID);
         Long sales = salesRepo.count();
-        Integer revenue = salesRepo.totalRevenue();
+        //Integer revenue = salesRepo.totalRevenue();
         Map<Integer, Long> hourCounts = times.stream()
                 .map(enterTime -> LocalDateTime.ofInstant(Instant.ofEpochMilli(enterTime), ZoneOffset.UTC))
                 .map(LocalDateTime::getHour)
                 .collect(Collectors.groupingBy(hour -> hour, Collectors.counting()));
         System.out.println("Overall total permit sales: " + sales);
-        System.out.println("Overall total permit revenue: " + revenue);
+        //System.out.println("Overall total permit revenue: " + revenue);
         System.out.println("Display stats for lot " + lotID);
         System.out.println("Occupancy: " + lotRepo.getOccupancyByLotID(lotID) + " out of " + lotRepo.getCapacityByLotID(lotID));
         System.out.println("Peak usage times: ");
@@ -97,12 +95,6 @@ public class AvailabilityService implements CheckSpace, Monitor, AddSale {
                 .forEach(entry -> System.out.println("Hour: " + entry.getKey()));
     }
 
-    @Override
-    public void addSale(BillDTO bill) {
-        SalesInfo sale = new SalesInfo();
-        sale.setBill(bill.getBill());
-        salesRepo.save(sale);
-    }
 
     private LogInfo translate(RequestDTO req, String lot) {
         return LogInfo.builder()

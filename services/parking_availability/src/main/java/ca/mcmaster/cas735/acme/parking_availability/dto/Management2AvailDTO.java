@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 @Data
-public class BillDTO {
-    private Integer bill;
+public class Management2AvailDTO {
+    private Integer valid_permits;
+
 }

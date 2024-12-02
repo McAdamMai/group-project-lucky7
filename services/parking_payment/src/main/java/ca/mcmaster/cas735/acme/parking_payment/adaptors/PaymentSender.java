@@ -1,14 +1,11 @@
 package ca.mcmaster.cas735.acme.parking_payment.adaptors;
 
 import ca.mcmaster.cas735.acme.parking_payment.dto.*;
-import ca.mcmaster.cas735.acme.parking_payment.ports.PaymentConfirmation2GateMsgBusIF;
+import ca.mcmaster.cas735.acme.parking_payment.ports.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ca.mcmaster.cas735.acme.parking_payment.ports.PaymentRequest2BankIF;
-import ca.mcmaster.cas735.acme.parking_payment.ports.Payment2MacSystemIF;
-import ca.mcmaster.cas735.acme.parking_payment.ports.PaymentConfirmation2ManagementIF;
 import org.springframework.amqp.core.TopicExchange;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
@@ -21,7 +18,8 @@ import java.util.Map;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class PaymentSender implements Payment2MacSystemIF, PaymentRequest2BankIF, PaymentConfirmation2ManagementIF, PaymentConfirmation2GateMsgBusIF {
+public class PaymentSender implements Payment2MacSystemIF, PaymentRequest2BankIF,
+        PaymentConfirmation2ManagementIF, PaymentConfirmation2GateMsgBusIF, Payment2Avl {
 
     private final String paymentRequest = "Bank account: test_account, PaymentId: ";
     private final RabbitTemplate rabbitTemplate; //new a rabbit template
@@ -31,6 +29,7 @@ public class PaymentSender implements Payment2MacSystemIF, PaymentRequest2BankIF
     @Value("${app.messaging.outbound-exchange-manager}") private  String outboundExchangeManager;
     @Value("${app.messaging.outbound-exchange-gate}") private  String outboundExchangeGate;
     @Value("${app.messaging.outbound-exchange-pos}") private String outboundExchangePos;
+    @Value("${app.messaging.outbound-exchange-avl}") private  String outboundExchangeAvl;
 
     //functions for UploadToMacSystemIF
     @Override
@@ -108,6 +107,16 @@ public class PaymentSender implements Payment2MacSystemIF, PaymentRequest2BankIF
         return new TopicExchange(outboundExchangePos);
     }
 
+    @Override
+    public void send2avl(Payment2AvailDTO payment2AvlDto) {
+        log.info("Sending a payment to avl: {}", payment2AvlDto);
+        rabbitTemplate.convertAndSend(outboundExchangeAvl,"*payment2availability", translate(payment2AvlDto));
+    }
+    @Bean
+    public TopicExchange outboundAvl() {
+        return new TopicExchange(outboundExchangeAvl);
+    }
+
     // universal translator
     private <T> String translate(T dto) {
         ObjectMapper objectMapper = new ObjectMapper();
@@ -117,5 +126,6 @@ public class PaymentSender implements Payment2MacSystemIF, PaymentRequest2BankIF
             throw new RuntimeException(e);
         }
     }
+
 
 }

@@ -52,4 +52,8 @@ public interface TransponderRepository extends JpaRepository<TransponderInfo,Str
     nativeQuery = true)
     void updateTransponderOrderId(@Param("macid") String macid,
                                   @Param("orderid") String orderid);
+
+    @Query(value = "SELECT COUNT(transponderid) FROM t_transponder WHERE expire_time < :current",
+            nativeQuery = true)
+    Integer countTransponderExpireTime(@Param("current") Long time);
 }

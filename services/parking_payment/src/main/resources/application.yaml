@@ -28,11 +28,13 @@ app:
       inbound-exchange-gate: gate2payment_msg
       inbound-exchange-manager: manager2payment_msg
       inbound-exchange-bank: in_bank_msg
+      inbound-exchange-avl: availability2payment_msg
       outbound-exchange-bank: out_payment_msg
       outbound-exchange-pos: payment2pos_msg
       outbound-exchange-gate: payment2gate_msg
       outbound-exchange-manager: payment2manager_msg
       outbound-exchange-Mac: out_mac_msg
+      outbound-exchange-avl: payment2availability_msg
 
 info:
   application:

@@ -1,15 +1,12 @@
 package ca.mcmaster.cas735.acme.parking_payment.adaptors;
 
 import ca.mcmaster.cas735.acme.parking_payment.business.ProcessPaymentInfo;
+import ca.mcmaster.cas735.acme.parking_payment.dto.*;
 import ca.mcmaster.cas735.acme.parking_payment.ports.*;
+import ca.mcmaster.cas735.acme.parking_payment.repository.PaymentInfoRepository;
 import ca.mcmaster.cas735.acme.parking_payment.utils.PaymentStatus;
 import ca.mcmaster.cas735.acme.parking_payment.utils.TypeOfPaymentMethod;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import ca.mcmaster.cas735.acme.parking_payment.dto.Enforcement2PaymentDto;
-import ca.mcmaster.cas735.acme.parking_payment.dto.Management2PaymentDto;
-import ca.mcmaster.cas735.acme.parking_payment.dto.Bank2PaymentDto;
-import ca.mcmaster.cas735.acme.parking_payment.dto.Gate2PaymentDto;
-import ca.mcmaster.cas735.acme.parking_payment.dto.PaymentConfirmation2ManagementDto;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
@@ -29,6 +26,8 @@ public class PaymentListener {
     private final Payment2MacSystemIF payment2MacSystemIF;
     private final PaymentConfirmation2ManagementIF paymentConfirmation2ManagementIF;
     private final ProcessPaymentInfo processPaymentInfo;
+    private final PaymentInfoRepository paymentInfoRepository;
+    private final Payment2Avl payment2Avl;
 
 
     //listener for the bank-------------------
@@ -97,6 +96,22 @@ public class PaymentListener {
         Enforcement2PaymentDto enforcement2PaymentDto = translate(message, Enforcement2PaymentDto.class);
         log.info("Received response from bank: {}", enforcement2PaymentDto);
         payment2MacSystemIF.updateFine(enforcement2PaymentDto); //update fine status on Mac system
+    }
+    //listener for avl---------------
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(value = "payment_avl.queue", durable = "true"),
+            exchange = @Exchange(value = "${app.messaging.inbound-exchange-avl}",
+                    ignoreDeclarationExceptions = "true", type = "topic"),
+            key = "*avl2payment"))
+    public void listenAvl(String message, @Header(AmqpHeaders.CONSUMER_QUEUE) String queue) {
+        System.out.println(message + queue + 'e');
+        if(translate(message, AvailabilityRequest.class).getKey()){
+            log.info("Users pay transponder via avl");
+            payment2Avl.send2avl(new Payment2AvailDTO(paymentInfoRepository.countTransponderSales(),
+                    paymentInfoRepository.SumSales(),
+                    paymentInfoRepository.SumTransponderSales(),
+                    paymentInfoRepository.SumParkingSales()));
+        }
     }
 
     private <T> T translate(String message, Class<T> clazz) {

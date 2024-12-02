@@ -32,10 +32,12 @@ app:
             inbound-exchange-enforcement: enforcement2manager_msg
             inbound-exchange-payment: payment2manager_msg
             inbound-exchange-gate: gate2manager_msg
+            inbound-exchange-avl: availability2manager_msg
             outbound-exchange-payment: manager2payment_msg
             outbound-exchange-Mac: out_mac_msg
             outbound-exchange-gate: manager2gate_msg
             outbound-exchange-enforcement: manager2enforcement_msg
+            outbound-exchange-availability: manager2availability_msg
 
 management:
     info:

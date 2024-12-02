@@ -32,9 +32,12 @@ app:
       inbound-exchange-topic: monitor-req
       inbound-exchange-gate: gate2availability_msg
       inbound-exchange-manager: manager2availability_msg
+      inbound-exchange-payment: payment2availability_msg
       outbound-exchange-topic: monitor
       outbound-exchange-gate: availability2gate_msg
-      outbount-exchange-monitor: availability2monitor_msg
+      outbound-exchange-monitor: availability2monitor_msg
+      outbound-exchange-payment: availability2payment_msg
+      outbound-exchange-management: availability2manager_msg
 
 management:
   info:

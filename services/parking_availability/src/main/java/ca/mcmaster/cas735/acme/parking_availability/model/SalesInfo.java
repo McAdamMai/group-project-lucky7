@@ -1,10 +1,6 @@
 package ca.mcmaster.cas735.acme.parking_availability.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
+import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
@@ -17,6 +13,11 @@ import lombok.*;
 public class SalesInfo{
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Integer id;
+
     private Integer valid_permits;
     private Integer permit_sales;
+    private Integer total_revenue;
+    private Integer permit_revenue;
+    private Integer parking_revenue;
 }
