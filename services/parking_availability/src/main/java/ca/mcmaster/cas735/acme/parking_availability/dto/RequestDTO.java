@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 public class RequestDTO {
     private Boolean isEnter;
     private String permit;
-    private String time;
+    private Long time;
     private String license;
+    private String gate;
 }
