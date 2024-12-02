@@ -7,8 +7,10 @@ import lombok.NoArgsConstructor;
 @Data
 public class ResponseDTO {
     private Boolean status;
+    private String gate;
 
-    public ResponseDTO(boolean status) {
+    public ResponseDTO(boolean status, String gate) {
+        this.gate = gate;
         this.status = status;
     }
 }

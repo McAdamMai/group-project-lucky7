@@ -222,5 +222,14 @@ public class ListenerGateSystem {
         Enforcement2GateResDto enforcement2GateResDto = GateSystemUtils.translate(message, Enforcement2GateResDto.class);
         gateService.addCharges(enforcement2GateResDto);
     }
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(value = "availability_req.queue" , durable = "true"),
+            exchange = @Exchange(value = "${app.custom.messaging.inbound-exchange-availability}",
+                    ignoreDeclarationExceptions = "true", type = "topic"),
+            key = "*availability2gate"))
+    public void listenAvailability(String message){
+        System.out.println(message);
+        log.info("receive message from gate_req.queue, {}", message);
+    }
 
 }
