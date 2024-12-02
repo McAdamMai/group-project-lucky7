@@ -17,7 +17,9 @@ import ca.mcmaster.cas735.acme.parking_availability.ports.Monitor;
 import ca.mcmaster.cas735.acme.parking_availability.ports.AddSale;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
 import java.util.UUID;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -46,35 +48,36 @@ public class AvailabilityService implements CheckSpace, Monitor, AddSale {
         this.gateSender = gateSender;
     }
 
+
     @Override
+    @Transactional
     public void checkSpace(RequestDTO request) {
-        boolean space = false;
+        boolean space;
+        String lot_id = lotRepo.getLotIDByGate(request.getGate());
         if (request.getIsEnter()) {
-            LotInfo lot = lotRepo.findByEnterGate(request.getGate());
-            LogInfo entry = translate(request, lot.getLotID());
-            Integer occupancy = lot.getOccupancy();
-            if (occupancy < lot.getCapacity()) {
-                lot.setOccupancy(occupancy + 1);
+            log.info("entrance {},", request.getGate());
+            LogInfo entry = translate(request, lot_id);
+            if (Objects.equals(lotRepo.compareOccupancy2Capacity(lot_id), "true")) {
+                lotRepo.updateOccupancyByLotId(1, lot_id);
                 logRepo.save(entry);
                 space = true;
+            }else {
+                space = false;
             }
         } else {
-            LotInfo lot = lotRepo.findByExitGate(request.getGate());
-            Integer occupancy = lot.getOccupancy();
-            LogInfo entry = translate(request, lot.getLotID());
+            log.info("exit {},", request.getGate());
+            LogInfo entry = translate(request, lot_id);
             logRepo.save(entry);
-            lot.setOccupancy(occupancy - 1);
+            lotRepo.updateOccupancyByLotId(-1, lot_id);
             space = true;
         }
-        ResponseDTO res = new ResponseDTO();
-        res.setStatus(space);
+        ResponseDTO res = new ResponseDTO(space, request.getGate());
         gateSender.sendToGate(res);
     }
 
     @Override
     public void monitor(MonitorRequestDTO request) {
         String lotID = request.getLot();
-        LotInfo lot = lotRepo.findByLotID(lotID);
         List<Long> times = logRepo.findAllEntryTimes(lotID);
         Long sales = salesRepo.count();
         Integer revenue = salesRepo.totalRevenue();
@@ -84,8 +87,8 @@ public class AvailabilityService implements CheckSpace, Monitor, AddSale {
                 .collect(Collectors.groupingBy(hour -> hour, Collectors.counting()));
         System.out.println("Overall total permit sales: " + sales);
         System.out.println("Overall total permit revenue: " + revenue);
-        System.out.println("Display stats for lot" + lotID);
-        System.out.println("Occupancy: " + lot.getOccupancy() + " out of " + lot.getCapacity());
+        System.out.println("Display stats for lot " + lotID);
+        System.out.println("Occupancy: " + lotRepo.getOccupancyByLotID(lotID) + " out of " + lotRepo.getCapacityByLotID(lotID));
         System.out.println("Peak usage times: ");
 
         hourCounts.entrySet().stream()

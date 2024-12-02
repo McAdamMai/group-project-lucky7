@@ -4,6 +4,6 @@ import ca.mcmaster.cas735.acme.parking_availability.dto.RequestDTO;
 
 public interface CheckSpace {
 
-    public void checkSpace(RequestDTO request);
+    void checkSpace(RequestDTO request);
 
 }

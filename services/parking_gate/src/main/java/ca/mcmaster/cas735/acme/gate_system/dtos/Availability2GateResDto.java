@@ -10,5 +10,6 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Availability2GateResDto {
-    private boolean isAvailable;
+    private Boolean isAvailable;
+    private String gate;
 }

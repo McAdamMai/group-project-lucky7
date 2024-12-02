@@ -35,7 +35,9 @@ app:
             inbound-exchange-payment: payment2gate_msg
             inbound-exchange-management: manager2gate_msg
             inbound-exchange-enforcement: enforcement2gate_msg
+            inbound-exchange-availability: availability2gate_msg
             outbound-exchange-payment: gate2payment_msg
+            onbound-exchange-gate: gate2availability_msg
             outbound-exchange-management: gate2manager_msg
 
 management:

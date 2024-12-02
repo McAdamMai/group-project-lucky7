@@ -65,7 +65,7 @@ public class SenderGateSystem implements GateIF {
     @Override
     public void sendAvailabilities(Gate2AvailabilityResDto gate2AvailabilityResDto) {
         log.info("Sending availabilities: {}", gate2AvailabilityResDto);
-        rabbitTemplate.convertAndSend(AVAILABILITY_REQUEST_QUEUE, "*gate2manager" ,gate2AvailabilityResDto);
+        rabbitTemplate.convertAndSend(AVAILABILITY_REQUEST_QUEUE, "*gate2availability" ,gate2AvailabilityResDto);
     }
 
     @Override

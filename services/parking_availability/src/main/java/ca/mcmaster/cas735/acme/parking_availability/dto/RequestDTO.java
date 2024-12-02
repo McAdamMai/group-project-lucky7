@@ -12,3 +12,4 @@ public class RequestDTO {
     private String license;
     private String gate;
 }
+// {"isEnter": true, "permit": "visitor", "time": 1733034715319, "license":"ABCDE", "gate":"EXIT12345"}
