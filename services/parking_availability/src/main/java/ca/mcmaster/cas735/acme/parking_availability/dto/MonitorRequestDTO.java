@@ -6,5 +6,5 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Data
 public class MonitorRequestDTO {
-    private String req;
+    private String lot;
 }
