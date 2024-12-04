@@ -8,5 +8,7 @@ import lombok.NoArgsConstructor;
 public class MemberDTO {
     private String license;
     private String macID;
+    private Long timeStamp;
+    private String reason;
     private Boolean found;
 }

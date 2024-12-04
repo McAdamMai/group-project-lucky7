@@ -20,12 +20,12 @@ app:
       port: 1884
       topic: acme_parking_enforcement
     messaging:
-      inbound-exchange-topic: license.filter
-      outbound-exchange-topic: scanner
-  messaging:
-    exchanges:
-      mainExchange: enforcement_msg
-      secondaryExchange: gate_msg
+      inbound-exchange-client: client_license
+      inbound-exchange-management: manager2enforcement_msg
+      outbound-exchange-management: enforcement2manager_msg
+      outbound-exchange-payment: enforcement2payment_msg
+      outbound-exchange-gate: enforcement2gate_msg
+
 
 management:
   info:
