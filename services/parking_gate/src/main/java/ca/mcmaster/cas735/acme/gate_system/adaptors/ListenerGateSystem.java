@@ -184,7 +184,7 @@ public class ListenerGateSystem {
         return adapter;
     }
 
-// AMQP listener
+// listen to management
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(value = "transponder_res.queue", durable = "true"),
             exchange = @Exchange(value = "${app.custom.messaging.inbound-exchange-management}",
@@ -196,10 +196,13 @@ public class ListenerGateSystem {
         Permit2GateResDto permit2GateResDto = GateSystemUtils.translate(message, Permit2GateResDto.class);
         if (permit2GateResDto.getIsVerified()) {
             gateService.enterExitParkingLotWithTransponder(permit2GateResDto.getLicensePlate(), permit2GateResDto.getGateId());
+        }else{
+            log.info("invalid transponder");
         }
         //else{}
     }
 
+    // listen to payment
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(value = "payment2gate.queue" , durable = "true"),
             exchange = @Exchange(value = "${app.custom.messaging.inbound-exchange-payment}",

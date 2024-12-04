@@ -9,13 +9,13 @@ import org.springframework.web.bind.annotation.*;
 
 
 @RestController
-@RequestMapping("/gateSystem/")
+@RequestMapping("/gateSystem")
 @RequiredArgsConstructor
 public class GateController {
 
     private final GateService gateService;
 
-    @PostMapping("visitorPass")
+    @PostMapping("/visitorPass")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<String> visitorPass(@RequestBody String licensePlate) {
         try{

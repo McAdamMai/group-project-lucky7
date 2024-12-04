@@ -8,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 public class Gate2AvailabilityResDto {
     private Boolean isEnter;
-    private String license;
+    private String licensePlate;
     private TypeOfClient typeOfClient;
     private Long time;
     private String gate;

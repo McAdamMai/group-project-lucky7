@@ -30,8 +30,8 @@ public class SenderGateSystem implements GateIF {
     @Value("${app.custom.messaging.outbound-exchange-payment}") private String outboundPaymentExchange;
     @Value("${app.custom.messaging.outbound-exchange-management}") private String VALIDATION_TRANSPONDER_REQUEST_QUEUE;
     //private final String VALIDATION_TRANSPONDER_REQUEST_QUEUE = "validationTransponderRequestQueue";
-    private final String AVAILABILITY_REQUEST_QUEUE = "availabilityRequestQueue";
-    private final String PAYMENT_REQUEST_QUEUE = "paymentRequestQueue";
+    @Value("${app.custom.messaging.outbound-exchange-availability}") private String AVAILABILITY_REQUEST_QUEUE;
+    @Value("${app.custom.messaging.outbound-exchange-payment}") private String PAYMENT_REQUEST_QUEUE ;
     private final String QRCODE_REQUEST_QUEUE = "QRCodeRequestQueue";
     private final String OPEN_GATE_QUEUE = "OpenGateQueue";
 
@@ -68,11 +68,20 @@ public class SenderGateSystem implements GateIF {
         log.info("Sending availabilities: {}", gate2AvailabilityResDto);
         rabbitTemplate.convertAndSend(AVAILABILITY_REQUEST_QUEUE, "*gate2availability" ,translate(gate2AvailabilityResDto));
     }
+    @Bean
+    public TopicExchange outboundAvl() {
+        // this will create the outbound exchange if it does not exist
+        return new TopicExchange(AVAILABILITY_REQUEST_QUEUE);
+    }
 
     @Override
     public void sendPaymentRequest(Gate2PaymentReqDto gate2PaymentReqDto) {
         log.info("Sending payment request for license plate: {}", gate2PaymentReqDto.getLicensePlate());
-        rabbitTemplate.convertAndSend(PAYMENT_REQUEST_QUEUE, translate(gate2PaymentReqDto));
+        rabbitTemplate.convertAndSend(PAYMENT_REQUEST_QUEUE, "*gate2payment",translate(gate2PaymentReqDto));
+    }
+    public TopicExchange outboundPayment() {
+        // this will create the outbound exchange if it does not exist
+        return new TopicExchange(PAYMENT_REQUEST_QUEUE);
     }
 
     private <T> String translate(T dto){

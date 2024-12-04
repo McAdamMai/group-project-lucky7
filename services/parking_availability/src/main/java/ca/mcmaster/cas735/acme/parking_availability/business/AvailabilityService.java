@@ -66,12 +66,10 @@ public class AvailabilityService implements UpdateSpace, Monitor, GateReq {
             }
         } else { //exit
             log.info("exit {},", request.getGate());
-            logRepo.updateExitTime(request.getLicense(), request.getTime());
+            logRepo.updateExitTime(request.getLicensePlate(), request.getTime());
             lotRepo.updateOccupancyByLotId(-1, lot_id);
             space = true;
         }
-        Avl2GateResponseDTO res = new Avl2GateResponseDTO(space, request.getGate()); // change it to REST
-        gateSender.sendToGate(res);
     }
 
     @Override
@@ -109,7 +107,7 @@ public class AvailabilityService implements UpdateSpace, Monitor, GateReq {
 
     private LogInfo translate2Enter(Gate2AvailabilityResDto req, String lot) {
         return LogInfo.builder()
-                .license(req.getLicense())
+                .license(req.getLicensePlate())
                 .lot(lot)
                 .enterTime(req.getTime())
                 .exitTime(-1L) //waiting for exit
