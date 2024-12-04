@@ -3,6 +3,7 @@ package ca.mcmaster.cas735.acme.gate_system.adaptors;
 import ca.mcmaster.cas735.acme.gate_system.GateSystemApplication;
 import ca.mcmaster.cas735.acme.gate_system.business.GateService;
 import ca.mcmaster.cas735.acme.gate_system.dtos.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -186,12 +187,12 @@ public class ListenerGateSystem {
 // AMQP listener
     @RabbitListener(bindings = @QueueBinding(
             value = @Queue(value = "transponder_res.queue", durable = "true"),
-            exchange = @Exchange(value = "${app.custom.messaging.outbound-exchange-management}",
+            exchange = @Exchange(value = "${app.custom.messaging.inbound-exchange-management}",
             ignoreDeclarationExceptions = "true", type = "topic"),
             key = "*manager2gate"))
-    public void listenValidTransponder(String message){
+    public void listenValidTransponder(String message) throws JsonProcessingException {
         System.out.println(message);
-        log.info("receive message from gate_req.queue, {}", message);
+        log.info("receive message from management, {}", message);
         Permit2GateResDto permit2GateResDto = GateSystemUtils.translate(message, Permit2GateResDto.class);
         if (permit2GateResDto.getIsVerified()) {
             gateService.enterExitParkingLotWithTransponder(permit2GateResDto.getLicensePlate(), permit2GateResDto.getGateId());
@@ -206,7 +207,7 @@ public class ListenerGateSystem {
             key = "*payment2gate"))
     public void listenPaymentConfirmation(String message){
         System.out.println(message);
-        log.info("receive message from gate_req.queue, {}", message);
+        log.info("receive message from payment, {}", message);
         Payment2GateResDto payment2GateResDto = GateSystemUtils.translate(message, Payment2GateResDto.class);
         gateService.exitingCar(payment2GateResDto);
     }
@@ -218,7 +219,7 @@ public class ListenerGateSystem {
             key = "*enforcement2gate"))
     public void listenCharges(String message){
         System.out.println(message);
-        log.info("receive message from gate_req.queue, {}", message);
+        log.info("receive message from enforcement, {}", message);
         Enforcement2GateResDto enforcement2GateResDto = GateSystemUtils.translate(message, Enforcement2GateResDto.class);
         gateService.addCharges(enforcement2GateResDto);
     }

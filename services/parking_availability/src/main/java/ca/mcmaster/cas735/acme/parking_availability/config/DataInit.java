@@ -1,6 +1,6 @@
 package ca.mcmaster.cas735.acme.parking_availability.config;
 
-import ca.mcmaster.cas735.acme.parking_availability.dto.AvailabilityRequest;
+import ca.mcmaster.cas735.acme.parking_availability.dto.InitializationRequest;
 import ca.mcmaster.cas735.acme.parking_availability.model.SalesInfo;
 import ca.mcmaster.cas735.acme.parking_availability.ports.AddSale;
 import ca.mcmaster.cas735.acme.parking_availability.repository.LotRepository;
@@ -63,7 +63,7 @@ public class DataInit{
     @PostConstruct
     public void initSaleInfo(){
         log.info("Init sales info in repo");
-        addSale.request2Payment(new AvailabilityRequest(true));
-        addSale.request2Management(new AvailabilityRequest(true));
+        addSale.request2Payment(new InitializationRequest(true));
+        addSale.request2Management(new InitializationRequest(true));
     }
 }

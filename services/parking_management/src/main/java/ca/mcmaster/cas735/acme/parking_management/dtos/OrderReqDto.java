@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 @Data
-public class    OrderReqDto {
+public class OrderReqDto {
     private String macID;
     private String orderId; //UUID
     private String transponderID; //UUID
@@ -15,5 +15,4 @@ public class    OrderReqDto {
     private TransponderType transponderType;
     private Long timeStamp;
     private TypeOfPaymentMethod paymentMethod;
-
 }

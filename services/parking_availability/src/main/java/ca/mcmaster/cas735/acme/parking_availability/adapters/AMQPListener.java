@@ -14,7 +14,6 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
 @Service
@@ -39,13 +38,13 @@ public class AMQPListener {
 
     //listen for gate
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(value = "gate_req.queue", durable = "true"),
+            value = @Queue(value = "gate2avl.queue", durable = "true"),
             exchange = @Exchange(value = "${app.custom.messaging.inbound-exchange-gate}",
             ignoreDeclarationExceptions = "true", type = "topic"),
             key = "*gate2availability"))
     public void listenGate(String message, @Header(AmqpHeaders.CONSUMER_QUEUE) String queue){
         log.info("receive message from {}, {}", queue, message);
-        availabilityService.checkSpace(translate(message, RequestDTO.class));
+        availabilityService.updateSpace(translate(message, Gate2AvailabilityResDto.class));
     }
 
     // listening to manager

@@ -20,7 +20,8 @@ public class LogInfo{
     private Long id;
     private String license;
     private String lot;
-    private String permit;
-    private Long timeStamp;
+    private String typeOfClient;
+    private Long enterTime;
+    private Long exitTime;
     private boolean isEnter;
 }

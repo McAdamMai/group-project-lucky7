@@ -6,10 +6,15 @@ import ca.mcmaster.cas735.acme.gate_system.model.GateSystemInfo;
 import ca.mcmaster.cas735.acme.gate_system.ports.GateIF;
 import ca.mcmaster.cas735.acme.gate_system.repository.GateSystemRepository;
 import ca.mcmaster.cas735.acme.gate_system.utils.TypeOfClient;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
 import java.util.*;
@@ -23,6 +28,7 @@ public class GateService {
     private final GateSystemRepository gateSystemRepository;
     private final GateIF gateIF;
     private final SenderGateSystem senderGateSystem;
+    private final WebClient webClient;
 
     private static final Set<String> exitGates = new HashSet<>(Arrays.asList("EXIT12345", "EXIT54321", "EXIT67890"));
     private static final Set<String> entryGates = new HashSet<>(Arrays.asList("ENTRY12345", "ENTRY54321", "ENTRY67890"));
@@ -52,17 +58,24 @@ public class GateService {
     }
 
     // Transponder exit and enter
-    public void enterExitParkingLotWithTransponder(String licensePlate, String gate) {
+    public void enterExitParkingLotWithTransponder(String licensePlate, String gate) throws JsonProcessingException {
         // This is after being validated
         if (exitGates.contains(gate)) {
             removeTransponder(licensePlate);
             // update availability of parking spots
             senderGateSystem.sendAvailabilities(Gate2AvailabilityResDto.builder()
+                    .isEnter(false)
                     .licensePlate(licensePlate)
-                    .exitTime(System.currentTimeMillis())
+                    .time(System.currentTimeMillis())
+                    .gate(gate)
                     .typeOfClient(TypeOfClient.PAYPERHOUR).build());
-
         } else if (entryGates.contains(gate)) {
+            Boolean space = getSpaceAvailability(gate);
+            log.info("parking lot availability {}", space);
+            if (!space) {
+                log.info("This parking lot is full");
+                return;
+            }
             saveTransponder(ParkingInfoRequest.builder()
                     .licensePlate(licensePlate)
                     .charge(0)
@@ -70,10 +83,12 @@ public class GateService {
                     .isVisitor(false)
                     .build());
             // update availability of parking spots
-            /*senderGateSystem.sendAvailabilities(Gate2AvailabilityResDto.builder()
+            senderGateSystem.sendAvailabilities(Gate2AvailabilityResDto.builder()
+                    .isEnter(true)
                     .licensePlate(licensePlate)
-                    .entryTime(System.currentTimeMillis())
-                    .typeOfClient(TypeOfClient.PAYPERHOUR).build());*/
+                    .time(System.currentTimeMillis())
+                    .gate(gate)
+                    .typeOfClient(TypeOfClient.PAYPERHOUR).build());
         } else {
             log.error("Invalid gate: {}", gate);
         }
@@ -83,8 +98,14 @@ public class GateService {
     }
 
     //
-    public void enterParkingLotWithoutTransponder(String licensePlate, String gate) {
+    public void enterParkingLotWithoutTransponder(String licensePlate, String gate) throws JsonProcessingException {
         // generate QR code
+        Boolean space = getSpaceAvailability(gate);
+        log.info("parking lot availability {}", space);
+        if (!space) {
+            log.info("This parking lot is full");
+            return;
+        }
         long QRCode = generateQRCode();
         log.info("Generated QR code: {}", QRCode);
         //modified: two system.currentTimeMills should be aligned
@@ -97,8 +118,10 @@ public class GateService {
                 .build());
         // update availability of parking spots
         senderGateSystem.sendAvailabilities(Gate2AvailabilityResDto.builder()
+                .isEnter(true)
                 .licensePlate(licensePlate)
-                .entryTime(entryTime)
+                .time(entryTime)
+                .gate(gate)
                 .typeOfClient(TypeOfClient.PAYPERHOUR).build());
         // send the QR code to mqtt service
         gateIF.generateQRCode(QRCode);
@@ -114,13 +137,21 @@ public class GateService {
     }
 
     // Assigned by officer
-    public void enterExitParkingLotWithQR(Long QRCode, String gate) {
+    public void enterExitParkingLotWithQR(Long QRCode, String gate) throws JsonProcessingException { //for guest?
         if(entryGates.contains(gate)) {
+            Boolean space = getSpaceAvailability(gate);
+            log.info("parking lot availability {}", space);
+            if (!space) {
+                log.info("This parking lot is full");
+                return;
+            }
             GateSystemInfo gateSystemInfo = gateSystemRepository.findByQRCode(QRCode);
             if (gateSystemInfo != null && gateSystemInfo.getIsVisitor()) {
                 senderGateSystem.sendAvailabilities(Gate2AvailabilityResDto.builder()
+                        .isEnter(true)
                         .licensePlate(gateSystemInfo.getLicensePlate())
-                        .entryTime(System.currentTimeMillis())
+                        .time(System.currentTimeMillis())
+                        .gate(gate)
                         .typeOfClient(TypeOfClient.VISITOR).build());
                 gateIF.openGate(gate);
                 return;
@@ -132,8 +163,10 @@ public class GateService {
                     && gateSystemInfo.getCharge() == 0 ) { //TODO: add fine decision making
                 removeTransponder(gateSystemInfo.getLicensePlate());
                 senderGateSystem.sendAvailabilities(Gate2AvailabilityResDto.builder()
+                        .isEnter(false)
                         .licensePlate(gateSystemInfo.getLicensePlate())
-                        .exitTime(System.currentTimeMillis())
+                        .time(System.currentTimeMillis())
+                        .gate(gate)
                         .typeOfClient(TypeOfClient.VISITOR).build());
                 gateIF.openGate(gate);
             }
@@ -169,8 +202,10 @@ public class GateService {
         // update availability of parking spots
         removeTransponder(payment2GateResDto.getLicensePlate());
         senderGateSystem.sendAvailabilities(Gate2AvailabilityResDto.builder()
+                .isEnter(false)
                 .licensePlate(payment2GateResDto.getLicensePlate())
-                .exitTime(System.currentTimeMillis())
+                .time(System.currentTimeMillis())
+                .gate(payment2GateResDto.getGate())
                 .typeOfClient(TypeOfClient.PAYPERHOUR).build());
         // open the gate
         log.info("Parking fee clears, {} is allowed  to exit", payment2GateResDto.getLicensePlate());
@@ -228,5 +263,24 @@ public class GateService {
         gateSystemRepository.save(gateSystemInfo);
         log.info("Visitor pass created for car {}", licensePlate);
         return qrCode;
+    }
+
+    private Boolean getSpaceAvailability(String gate) throws JsonProcessingException {
+        GateCheckSpaceDto gateCheckSpaceDto = new GateCheckSpaceDto(gate, true);
+        ObjectMapper objectMapper = new ObjectMapper();
+        String jsonObj = objectMapper.writeValueAsString(gateCheckSpaceDto);
+        try {
+            return webClient.post()
+                    .uri("http://localhost:9083/member-service/availability/check")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .bodyValue(jsonObj)
+                    .retrieve()
+                    .bodyToMono(Boolean.class)
+                    .onErrorReturn(false)
+                    .block();
+        }catch (Exception e){
+            log.error("getSpaceAvailability error", e);
+            return false;
+        }
     }
 }

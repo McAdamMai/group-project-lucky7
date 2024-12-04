@@ -11,8 +11,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Gate2AvailabilityResDto {
+    private Boolean isEnter;
     private String licensePlate;
     private TypeOfClient typeOfClient;
-    private Long entryTime;
-    private Long exitTime;
+    private Long time;
+    private String gate;
 }

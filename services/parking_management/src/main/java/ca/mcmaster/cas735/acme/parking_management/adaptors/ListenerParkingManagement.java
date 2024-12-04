@@ -40,7 +40,7 @@ public class ListenerParkingManagement {
 
          //listener for the gate
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(value = "gate_req.queue", durable = "true"),
+            value = @Queue(value = "gate2management.queue", durable = "true"),
             exchange = @Exchange(value = "gate2manager_msg",
             ignoreDeclarationExceptions = "true", type = "topic"),
             key = "*gate2manager"

@@ -5,10 +5,10 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 @Data
-public class AvailabilityRequest {
+public class InitializationRequest {
     private Boolean key;
 
-    public AvailabilityRequest(Boolean key) {
+    public InitializationRequest(Boolean key) {
         this.key = key;
     }
 }

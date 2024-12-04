@@ -23,7 +23,7 @@ public class AMQPSender implements AddSale {
     @Value("${app.custom.messaging.outbound-exchange-payment}") private String outboundExchangePayment;
     @Value("${app.custom.messaging.outbound-exchange-management}") private String outboundExchangeManagement;
 
-    public void sendToGate(ResponseDTO res) {
+    public void sendToGate(Avl2GateResponseDTO res) {
         rabbitTemplate.convertAndSend(outboundExchangeGate, "*availability2gate",translate(res));
         log.info("send payment request to the parking_payment service: {}", res);
     }
@@ -35,9 +35,9 @@ public class AMQPSender implements AddSale {
 
     // req to payment
     @Override
-    public void request2Payment(AvailabilityRequest availabilityRequest) {
-        log.info("sending req to payment {}", availabilityRequest);
-        rabbitTemplate.convertAndSend(outboundExchangePayment, "*avl2payment",translate(availabilityRequest));
+    public void request2Payment(InitializationRequest initializationRequest) {
+        log.info("sending req to payment {}", initializationRequest);
+        rabbitTemplate.convertAndSend(outboundExchangePayment, "*avl2payment",translate(initializationRequest));
     }
     @Bean
     public TopicExchange outboundPayment() {
@@ -46,9 +46,9 @@ public class AMQPSender implements AddSale {
 
     // req to management
     @Override
-    public void request2Management(AvailabilityRequest availabilityRequest) {
-        log.info("sending req to manage {}", availabilityRequest);
-        rabbitTemplate.convertAndSend(outboundExchangeManagement, "*avl2management",translate(availabilityRequest));
+    public void request2Management(InitializationRequest initializationRequest) {
+        log.info("sending req to manage {}", initializationRequest);
+        rabbitTemplate.convertAndSend(outboundExchangeManagement, "*avl2management",translate(initializationRequest));
     }
     @Bean
     public TopicExchange outboundManagement() {
@@ -56,9 +56,9 @@ public class AMQPSender implements AddSale {
     }
 
     //send to external system
-    public void sendToMonitor(AvailabilityRequest availabilityRequest) {
-        log.info("send response {} to {}", availabilityRequest,outboundExchangeMonitor);
-        rabbitTemplate.convertAndSend(outboundExchangeMonitor, "*avl2monitor",translate(availabilityRequest));
+    public void sendToMonitor(InitializationRequest initializationRequest) {
+        log.info("send response {} to {}", initializationRequest,outboundExchangeMonitor);
+        rabbitTemplate.convertAndSend(outboundExchangeMonitor, "*avl2monitor",translate(initializationRequest));
     }
     @Bean
     public TopicExchange outboundMonitor() {

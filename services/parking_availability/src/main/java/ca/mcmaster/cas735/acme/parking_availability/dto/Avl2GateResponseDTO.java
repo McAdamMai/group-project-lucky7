@@ -5,11 +5,11 @@ import lombok.NoArgsConstructor;
 
 @NoArgsConstructor
 @Data
-public class ResponseDTO {
+public class Avl2GateResponseDTO {
     private Boolean status;
     private String gate;
 
-    public ResponseDTO(boolean status, String gate) {
+    public Avl2GateResponseDTO(boolean status, String gate) {
         this.gate = gate;
         this.status = status;
     }

@@ -21,7 +21,7 @@ import java.util.Objects;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class PaymentInfoProcessor implements ProcessPaymentInfo {
+public class    PaymentInfoProcessor implements ProcessPaymentInfo {
 
     private final PaymentRequest2BankIF paymentRequest2BankIF;
     private final PaymentInfoRepository paymentInfoRepository;
