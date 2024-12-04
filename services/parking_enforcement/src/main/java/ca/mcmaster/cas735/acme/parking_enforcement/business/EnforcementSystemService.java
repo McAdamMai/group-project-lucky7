@@ -1,57 +1,47 @@
 package ca.mcmaster.cas735.acme.parking_enforcement.business;
 
-import ca.mcmaster.cas735.acme.parking_enforcement.adapters.SearchREST;
-import ca.mcmaster.cas735.acme.parking_enforcement.dto.*;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import lombok.extern.slf4j.Slf4j;
-import ca.mcmaster.cas735.acme.parking_enforcement.dto.SearchRequestDTO;
+import ca.mcmaster.cas735.acme.parking_enforcement.dto.MemberDTO;
+import ca.mcmaster.cas735.acme.parking_enforcement.dto.FineLicenseDTO;
+import ca.mcmaster.cas735.acme.parking_enforcement.dto.FinePaymentDTO;
+import ca.mcmaster.cas735.acme.parking_enforcement.dto.FineGateDTO;
 import ca.mcmaster.cas735.acme.parking_enforcement.ports.FineFilter;
-import ca.mcmaster.cas735.acme.parking_enforcement.ports.SendFine2GateIF;
-import ca.mcmaster.cas735.acme.parking_enforcement.ports.SendFine2PaymentIF;
-import org.springframework.amqp.core.Message;
-import org.springframework.amqp.core.MessageProperties;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
+import ca.mcmaster.cas735.acme.parking_enforcement.ports.FinePayment;
+import ca.mcmaster.cas735.acme.parking_enforcement.ports.FineGate;
+import ca.mcmaster.cas735.acme.parking_enforcement.adapters.AMQPSender;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.UUID;
 
 @Service @Slf4j
-public class EnforcementSystemService implements FineFilter, SendFine2GateIF, SendFine2PaymentIF {
-    @Autowired
-    private RabbitTemplate rabbitTemplate;
-    
-    private final SearchREST searchRest;
+public class EnforcementSystemService implements FineFilter, FineGate, FinePayment {
 
-    // Queue names
-    private static final String FINE_PAYMENT_QUEUE = "finePaymentQueue";
-    private static final String FINE_GATE_QUEUE = "fineGateQueue";
+    private final AMQPSender sender;
 
     @Autowired
-    public EnforcementSystemService(SearchREST searchRest) {
-        this.searchRest = searchRest;
+    public EnforcementSystemService(AMQPSender sender) {
+        this.sender = sender;
     }
 
     @Override
-    public void sendFine(String message) {
-        String license = message;
-        FineLicenseDTO fineLicense = translateLicense(license); //msg to LicenseDTO
-        SearchRequestDTO request = new SearchRequestDTO();
-        request.setLicense(fineLicense.getLicense());
-        MemberDTO member = searchRest.lookupByMemberId(request);
-        if (member.getFound()) { //
+    public void findMember(FineLicenseDTO message) {
+        sender.sendManagement(message);
+    }
+
+    @Override
+    public void sendFine(MemberDTO member) {
+        if (member.getFound()) {
             FinePaymentDTO fineP = new FinePaymentDTO();
             fineP.setMacID(member.getMacID());
-            fineP.setLicensePlate(fineLicense.getLicense());
+            fineP.setLicensePlate(member.getLicense());
             fineP.setBill(15);
-            fineP.setTimeStamp(fineLicense.getTimeStamp());
-            fineP.setFineReason(fineLicense.getReason());
+            fineP.setTimeStamp(member.getTimeStamp());
+            fineP.setFineReason(member.getReason());
             sendFinePayment(fineP);
         } else {
             FineGateDTO fineG = new FineGateDTO();
-            fineG.setLicense(fineLicense.getLicense());
+            fineG.setLicense(member.getLicense());
             fineG.setBill(15);
             sendFineGate(fineG);
         }
@@ -59,26 +49,13 @@ public class EnforcementSystemService implements FineFilter, SendFine2GateIF, Se
 
     @Override
     public void sendFinePayment(FinePaymentDTO fine) {
-        // Send the request message to the validationRequestQueue
-        rabbitTemplate.convertAndSend(FINE_PAYMENT_QUEUE, fine);
-
+        sender.sendPayment(fine);
         System.out.println("Sent fine to payment for license: " + fine.getLicensePlate());
     }
 
     @Override
     public void sendFineGate(FineGateDTO fine) {
-        // Send the request message to the validationRequestQueue
-        rabbitTemplate.convertAndSend(FINE_GATE_QUEUE, fine);
-
+        sender.sendGate(fine);
         System.out.println("Sent fine to gate for license: " + fine.getLicense());
-    }
-
-    private FineLicenseDTO translateLicense(String raw) {
-        ObjectMapper objectMapper = new ObjectMapper();
-        try {
-            return objectMapper.readValue(raw, FineLicenseDTO.class);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 }
