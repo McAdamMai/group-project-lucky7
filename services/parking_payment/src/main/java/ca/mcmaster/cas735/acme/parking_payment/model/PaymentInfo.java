@@ -19,5 +19,6 @@ public class PaymentInfo {
     private Integer bill;
     private String ProductId;
     private Integer paymentStatus;
+    private String GateId;
 
 }

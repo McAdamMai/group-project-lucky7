@@ -31,6 +31,7 @@ app:
             transponderTopic: transponder
             qrTopic: qrcode
             buttonClickTopic: buttonClick
+
         messaging:
             inbound-exchange-payment: payment2gate_msg
             inbound-exchange-management: manager2gate_msg

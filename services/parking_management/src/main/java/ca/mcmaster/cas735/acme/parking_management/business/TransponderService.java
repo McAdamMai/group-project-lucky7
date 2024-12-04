@@ -133,7 +133,7 @@ public class TransponderService implements OrderProcessorIF {
         permit2GateResDto.setGateId(gate2PermitReqDto.getGateId()); //set the gate
         String transponderId = gate2PermitReqDto.getTransponderId();
         if(transponderRepository.existsByTransponderID(transponderId) &&
-                transponderRepository.getExpireTimeByOrderTId(transponderId) < System.currentTimeMillis()){
+                transponderRepository.getExpireTimeByOrderTId(transponderId) > System.currentTimeMillis()){
             permit2GateResDto.setIsVerified(true);
             permit2GateResDto.setLicensePlate(transponderRepository.getLicensePlateByOrderTId(transponderId));
         }else {

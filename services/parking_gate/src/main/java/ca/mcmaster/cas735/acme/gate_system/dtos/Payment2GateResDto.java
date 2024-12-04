@@ -11,6 +11,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class Payment2GateResDto {
     private String licensePlate;
-    private Boolean paymentStatus;
-    private String gate;
+    private Integer paymentStatus;
+    private String gateId;
 }

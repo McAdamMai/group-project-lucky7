@@ -18,7 +18,7 @@ public interface LogRepository extends JpaRepository<LogInfo,Long> {
 
     @Modifying
     @Transactional
-    @Query(value = "UPDATE t_loginfo l SET l.exit_time = :exit_time WHERE l.license = :license AND l.is_enter = true AND l.exit_time = -1L",
+    @Query(value = "UPDATE t_loginfo l SET l.exit_time = :exit_time WHERE l.license = :license AND l.is_enter = true AND l.exit_time = -1",
             nativeQuery = true)
     void updateExitTime(@Param("license") String license, @Param("exit_time") long exit_time);
 }

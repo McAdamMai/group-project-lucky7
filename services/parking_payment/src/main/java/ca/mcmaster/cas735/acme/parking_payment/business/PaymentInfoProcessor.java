@@ -69,6 +69,8 @@ public class    PaymentInfoProcessor implements ProcessPaymentInfo {
         if(paymentInfo!=null){
             if(Objects.equals(paymentInfo.getProductName(), ProductName.Parking)){
                 PaymentConfirmation2GateDto paymentConfirmation2GateDto = new PaymentConfirmation2GateDto();
+                paymentConfirmation2GateDto.
+                        setGateId(paymentInfo.getGateId());
                 paymentConfirmation2GateDto
                         .setPaymentStatus(paymentInfo.getPaymentStatus());
                 paymentConfirmation2GateDto
@@ -95,6 +97,7 @@ public class    PaymentInfoProcessor implements ProcessPaymentInfo {
         paymentInfo.setProductId(management2PaymentDto.getMacID());
         paymentInfo.setBill(management2PaymentDto.getBill());
         paymentInfo.setPaymentStatus(PaymentStatus.Processing);
+        paymentInfo.setGateId("");
         return paymentInfo;
     }
 
@@ -105,6 +108,7 @@ public class    PaymentInfoProcessor implements ProcessPaymentInfo {
         paymentInfo.setProductId(gate2PaymentDto.getLicensePlate());
         paymentInfo.setBill(gate2PaymentDto.getBill());
         paymentInfo.setPaymentStatus(PaymentStatus.Processing);
+        paymentInfo.setGateId(gate2PaymentDto.getGateID());
         return paymentInfo;
     }
 

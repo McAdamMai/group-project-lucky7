@@ -8,4 +8,5 @@ import lombok.NoArgsConstructor;
 public class PaymentConfirmation2GateDto {
     private String licensePlate;
     private Integer paymentStatus;
+    private String gateId;
 }
