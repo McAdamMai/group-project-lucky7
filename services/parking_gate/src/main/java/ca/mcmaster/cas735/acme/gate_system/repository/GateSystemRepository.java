@@ -23,4 +23,10 @@ public interface GateSystemRepository extends JpaRepository<GateSystemInfo,Strin
     @Query(value = "UPDATE t_gate SET entry_time = :value WHERE qrcode = :code",
             nativeQuery = true)
     void updateEntryTimeByQrcode(@Param("value") Long time, @Param("code") Long QRCode);
+
+    @Modifying
+    @Transactional
+    @Query(value = "UPDATE t_gate SET entry_time = :value WHERE license_plate = :license",
+            nativeQuery = true)
+    void updateEntryTimeByLicensePlate(@Param("value") Long time, @Param("license") String value);
 }

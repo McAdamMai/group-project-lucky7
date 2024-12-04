@@ -52,23 +52,18 @@ public class AvailabilityService implements UpdateSpace, Monitor, GateReq {
     @Override
     @Transactional
     public void updateSpace(Gate2AvailabilityResDto request) {
-        boolean space;
         String lot_id = lotRepo.getLotIDByGate(request.getGate());
         if (request.getIsEnter()) {
             log.info("entrance {},", request.getGate());
             LogInfo parkingRecord = translate2Enter(request, lot_id);
             if (Objects.equals(lotRepo.compareOccupancy2Capacity(lot_id), "true")) {
-                lotRepo.updateOccupancyByLotId(1, lot_id);
                 logRepo.save(parkingRecord);
-                space = true;
-            }else {
-                space = false;
+                lotRepo.updateOccupancyByLotId(1, lot_id);
             }
         } else { //exit
             log.info("exit {},", request.getGate());
             logRepo.updateExitTime(request.getLicensePlate(), request.getTime());
             lotRepo.updateOccupancyByLotId(-1, lot_id);
-            space = true;
         }
     }
 
