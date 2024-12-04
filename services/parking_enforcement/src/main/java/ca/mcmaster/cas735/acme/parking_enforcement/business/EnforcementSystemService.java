@@ -41,8 +41,10 @@ public class EnforcementSystemService implements FineFilter, FineGate, FinePayme
             sendFinePayment(fineP);
         } else {
             FineGateDTO fineG = new FineGateDTO();
-            fineG.setLicense(member.getLicense());
+            fineG.setLicensePlate(member.getLicense());
             fineG.setBill(15);
+            fineG.setTimeStamp(member.getTimeStamp());
+            fineG.setFineReason(member.getReason());
             sendFineGate(fineG);
         }
     }
@@ -56,6 +58,6 @@ public class EnforcementSystemService implements FineFilter, FineGate, FinePayme
     @Override
     public void sendFineGate(FineGateDTO fine) {
         sender.sendGate(fine);
-        System.out.println("Sent fine to gate for license: " + fine.getLicense());
+        System.out.println("Sent fine to gate for license: " + fine.getLicensePlate());
     }
 }

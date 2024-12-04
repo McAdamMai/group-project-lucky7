@@ -12,6 +12,6 @@ import lombok.NoArgsConstructor;
 public class Enforcement2GateResDto {
     private String licensePlate;
     private Integer bill;
-    private Integer timeStamp;
+    private Long timeStamp;
     private String fineReason;
 }

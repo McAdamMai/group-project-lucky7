@@ -90,7 +90,7 @@ public class PaymentListener {
             value = @Queue(value = "payment_enforcement.queue", durable = "true"),
             exchange = @Exchange(value = "${app.messaging.inbound-exchange-enforcement}",
                     ignoreDeclarationExceptions = "true", type = "topic"),
-            key = "*enforcement"))
+            key = "*enforcement2payment"))
     public void listenEnforcement(String message, @Header(AmqpHeaders.CONSUMER_QUEUE) String queue) {
         System.out.println(message + queue + 'd');
         Enforcement2PaymentDto enforcement2PaymentDto = translate(message, Enforcement2PaymentDto.class);

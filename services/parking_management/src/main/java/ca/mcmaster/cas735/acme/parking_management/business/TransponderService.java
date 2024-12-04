@@ -4,6 +4,7 @@ import ca.mcmaster.cas735.acme.parking_management.dtos.*;
 import ca.mcmaster.cas735.acme.parking_management.model.TransponderInfo;
 import ca.mcmaster.cas735.acme.parking_management.ports.Management2GateIF;
 import ca.mcmaster.cas735.acme.parking_management.ports.Management2MacSystemIF;
+import ca.mcmaster.cas735.acme.parking_management.ports.Management2EnforcementIF;
 import ca.mcmaster.cas735.acme.parking_management.ports.PaymentIF;
 import ca.mcmaster.cas735.acme.parking_management.repository.TransponderRepository;
 import ca.mcmaster.cas735.acme.parking_management.utils.PaymentStatus;
@@ -23,6 +24,7 @@ public class TransponderService implements OrderProcessorIF {
     private final PaymentIF paymentIF;
     private final Management2MacSystemIF management2MacSystemIF;
     private final Management2GateIF management2GateIF;
+    private final Management2EnforcementIF management2EnforcementIF;
 
     @Override
     public UserStatus updateUserInfo(String macId){
@@ -139,6 +141,18 @@ public class TransponderService implements OrderProcessorIF {
             permit2GateResDto.setLicensePlate("");
         }
         management2GateIF.update2gate(permit2GateResDto);
+    }
+
+    @Override
+    public void findMember(FineLicenseDTO req){
+        String license = req.getLicense();
+        TransponderInfo transponder = transponderRepository.findByLicensePlate(license);
+        if (transponder != null) {
+            management2EnforcementIF.update2enforcement(new MemberDTO(license, transponder.getMacID(), req.getTimeStamp(), req.getReason(), true));
+        }
+        else {
+            management2EnforcementIF.update2enforcement(new MemberDTO(license, null, req.getTimeStamp(), req.getReason(), false));
+        }
     }
 
     private TransponderInfo translate2Transponder(OrderReqDto orderReqDto) {

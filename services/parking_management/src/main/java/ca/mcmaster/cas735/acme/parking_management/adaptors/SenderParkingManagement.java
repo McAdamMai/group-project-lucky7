@@ -1,11 +1,13 @@
 package ca.mcmaster.cas735.acme.parking_management.adaptors;
 
+import ca.mcmaster.cas735.acme.parking_management.dtos.MemberDTO;
 import ca.mcmaster.cas735.acme.parking_management.dtos.AvailabilityResp;
 import ca.mcmaster.cas735.acme.parking_management.dtos.Management2MacDto;
 import ca.mcmaster.cas735.acme.parking_management.dtos.Permit2GateResDto;
 import ca.mcmaster.cas735.acme.parking_management.ports.Management2GateIF;
 import ca.mcmaster.cas735.acme.parking_management.ports.Management2MacSystemIF;
 import ca.mcmaster.cas735.acme.parking_management.ports.Management2avlIF;
+import ca.mcmaster.cas735.acme.parking_management.ports.Management2EnforcementIF;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.TopicExchange;
@@ -22,12 +24,13 @@ import java.io.IOException;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class SenderParkingManagement implements PaymentIF, Management2MacSystemIF, Management2GateIF, Management2avlIF {
+public class SenderParkingManagement implements PaymentIF, Management2MacSystemIF, Management2GateIF, Management2avlIF, Management2EnforcementIF {
     private final RabbitTemplate rabbitTemplate;
     @Value("${app.custom.messaging.outbound-exchange-payment}") private String outboundExchangePayment;
     @Value("${app.custom.messaging.outbound-exchange-Mac}") private String outboundExchangeMac;
     @Value("${app.custom.messaging.outbound-exchange-gate}") private String outboundExchangeGate;
     @Value("${app.custom.messaging.outbound-exchange-availability}") private String outboundExchangeAvailability;
+    @Value("${app.custom.messaging.outbound-exchange-enforcement}") private String outboundExchangeEnforcement;
 
     @Override
     public void sendToPayment(Management2PaymentDto management2PaymentDto) {
@@ -72,6 +75,17 @@ public class SenderParkingManagement implements PaymentIF, Management2MacSystemI
     public TopicExchange outboundAvl() {
         // this will create the outbound exchange if it does not exist
         return new TopicExchange(outboundExchangeAvailability);
+    }
+
+    @Override
+    public void update2enforcement(MemberDTO member){
+        rabbitTemplate.convertAndSend(outboundExchangeEnforcement, "*manager2enforcement", translate(member));
+        log.info("update permit to the gate: {} to {}", member, outboundExchangeEnforcement);
+    }
+    @Bean
+    public TopicExchange outboundEnforcement() {
+        // this will create the outbound exchange if it does not exist
+        return new TopicExchange(outboundExchangeEnforcement);
     }
 
     private <T> String translate(T dto){

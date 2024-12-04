@@ -8,7 +8,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface TransponderRepository extends JpaRepository<TransponderInfo,String>
 {
-    TransponderInfo findByMacID(String macID); //additional method to find by macID
+    TransponderInfo findByMacID(String macID);
+    TransponderInfo findByLicensePlate(String license);//additional method to find by macID
     boolean existsByMacID(String macID);
     boolean existsByOrderID(String orderID);
     boolean existsByTransponderID(String transponderID);

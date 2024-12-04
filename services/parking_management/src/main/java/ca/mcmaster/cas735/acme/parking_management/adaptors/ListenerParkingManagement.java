@@ -1,6 +1,7 @@
 package ca.mcmaster.cas735.acme.parking_management.adaptors;
 
 import ca.mcmaster.cas735.acme.parking_management.business.OrderProcessorIF;
+import ca.mcmaster.cas735.acme.parking_management.dtos.FineLicenseDTO;
 import ca.mcmaster.cas735.acme.parking_management.dtos.AvailabilityRequest;
 import ca.mcmaster.cas735.acme.parking_management.dtos.AvailabilityResp;
 import ca.mcmaster.cas735.acme.parking_management.dtos.Gate2PermitReqDto;
@@ -62,6 +63,16 @@ public class ListenerParkingManagement {
             manager2avlIF.send2val(new AvailabilityResp(
                     transponderRepository.countTransponderExpireTime(System.currentTimeMillis())));
         }
+    }
+
+    @RabbitListener(bindings = @QueueBinding(
+            value = @Queue(value = "enforcement_req.queue", durable = "true"),
+            exchange = @Exchange(value = "${app.custom.messaging.inbound-exchange-enforcement}",
+                    ignoreDeclarationExceptions = "true", type = "topic"),
+            key = "*enforcement2manager"))
+    public void listenEnforcement(String message, @Header(AmqpHeaders.CONSUMER_QUEUE) String queue){
+        log.info("receive message from {}, {}", queue, message);
+        orderProcessor.findMember(translate(message, FineLicenseDTO.class));
     }
     //listener for others
     //...
