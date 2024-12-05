@@ -27,7 +27,7 @@ public class AMQPListener {
 
     //listener for client
     @RabbitListener(bindings = @QueueBinding(
-            value = @Queue(value = "client_req.queue", durable = "true"),
+            value = @Queue(value = "fine_req.queue", durable = "true"),
             exchange = @Exchange(value = "${app.custom.messaging.inbound-exchange-client}",
                     ignoreDeclarationExceptions = "true", type = "topic"),
             key = "*client2enforcement"))

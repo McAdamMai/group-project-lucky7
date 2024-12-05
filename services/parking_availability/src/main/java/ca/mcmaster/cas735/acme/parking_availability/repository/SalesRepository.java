@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 public interface SalesRepository extends JpaRepository<SalesInfo, Integer>
 {
-    Integer findAllById(int id);
+    SalesInfo findAllById(int id);
 
     @Transactional
     @Modifying

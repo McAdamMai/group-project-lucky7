@@ -11,12 +11,17 @@ public interface GateSystemRepository extends JpaRepository<GateSystemInfo,Strin
 {
     GateSystemInfo findByQRCode(Long QRCode);
     GateSystemInfo findByLicensePlate(String licensePlate);
+
     @Modifying
-    @Query(value = "UPDATE t_gate SET charge = :charge,fine_reason= :reason WHERE license_plate = :license_plate",
+    @Query(value = "UPDATE t_gate SET charge = charge + :charge WHERE license_plate = :license_plate",
             nativeQuery = true)
-    void updateGateSystemInfo(@Param("license_plate") String license_plate,
-                              @Param("reason") String reason,
-                              @Param("charge") Integer charge);
+    void updateGateSystemInfoCharge(@Param("charge") Integer charge, @Param("license_plate") String license_plate);
+
+    @Modifying
+    @Query(value = "UPDATE t_gate SET fine_reason= :reason WHERE license_plate = :license_plate",
+            nativeQuery = true)
+    void updateGateSystemInfoReason(@Param("license_plate") String license_plate,
+                                    @Param("reason") String reason);
 
     @Modifying
     @Transactional

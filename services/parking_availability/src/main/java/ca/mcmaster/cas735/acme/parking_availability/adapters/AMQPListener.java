@@ -1,8 +1,9 @@
 package ca.mcmaster.cas735.acme.parking_availability.adapters;
 
 import ca.mcmaster.cas735.acme.parking_availability.dto.*;
-import ca.mcmaster.cas735.acme.parking_availability.business.AvailabilityService;
 import ca.mcmaster.cas735.acme.parking_availability.ports.AddSale;
+import ca.mcmaster.cas735.acme.parking_availability.ports.Monitor;
+import ca.mcmaster.cas735.acme.parking_availability.ports.UpdateSpace;
 import ca.mcmaster.cas735.acme.parking_availability.repository.SalesRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.amqp.rabbit.annotation.Exchange;
@@ -20,9 +21,10 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AMQPListener {
 
-    private final AvailabilityService availabilityService;
+    private final Monitor monitor;
     private final AddSale addSale;
     private final SalesRepository salesRepository;
+    private final UpdateSpace updateSpaceIF;
 
     //listener for monitor
     @RabbitListener(bindings = @QueueBinding(
@@ -33,7 +35,7 @@ public class AMQPListener {
 
     public void listenClient(String message, @Header(AmqpHeaders.CONSUMER_QUEUE) String queue){
         log.info("receive message from {}, {}", queue, message);
-        availabilityService.monitor(translate(message, MonitorRequestDTO.class));
+        String json = monitor.monitor();
     }
 
     //listen for gate
@@ -44,7 +46,7 @@ public class AMQPListener {
             key = "*gate2availability"))
     public void listenGate(String message, @Header(AmqpHeaders.CONSUMER_QUEUE) String queue){
         log.info("receive message from {}, {}", queue, message);
-        availabilityService.updateSpace(translate(message, Gate2AvailabilityResDto.class));
+        updateSpaceIF.updateSpace(translate(message, Gate2AvailabilityResDto.class));
     }
 
     // listening to manager

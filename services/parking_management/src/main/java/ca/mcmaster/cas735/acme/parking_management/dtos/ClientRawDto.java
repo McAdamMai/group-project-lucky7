@@ -15,3 +15,11 @@ public class ClientRawDto {
     private Long timeStamp;
     private TypeOfPaymentMethod paymentMethod;
 }
+//{
+//    "macID": "402608202",
+//    "clientOrderId": "ABKDOW",
+//    "transponderType": "REGI4",
+//    "licensePlate": "U55U9",
+//    "timeStamp": 1733274821714,
+//    "paymentMethod": "Bank"
+//}

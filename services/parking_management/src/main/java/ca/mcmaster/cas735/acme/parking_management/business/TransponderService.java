@@ -2,10 +2,7 @@ package ca.mcmaster.cas735.acme.parking_management.business;
 
 import ca.mcmaster.cas735.acme.parking_management.dtos.*;
 import ca.mcmaster.cas735.acme.parking_management.model.TransponderInfo;
-import ca.mcmaster.cas735.acme.parking_management.ports.Management2GateIF;
-import ca.mcmaster.cas735.acme.parking_management.ports.Management2MacSystemIF;
-import ca.mcmaster.cas735.acme.parking_management.ports.Management2EnforcementIF;
-import ca.mcmaster.cas735.acme.parking_management.ports.PaymentIF;
+import ca.mcmaster.cas735.acme.parking_management.ports.*;
 import ca.mcmaster.cas735.acme.parking_management.repository.TransponderRepository;
 import ca.mcmaster.cas735.acme.parking_management.utils.PaymentStatus;
 import ca.mcmaster.cas735.acme.parking_management.utils.TransponderType;
@@ -25,6 +22,7 @@ public class TransponderService implements OrderProcessorIF {
     private final Management2MacSystemIF management2MacSystemIF;
     private final Management2GateIF management2GateIF;
     private final Management2EnforcementIF management2EnforcementIF;
+    private final Management2avlIF management2avlIF;
 
     @Override
     public UserStatus updateUserInfo(String macId){
@@ -56,7 +54,7 @@ public class TransponderService implements OrderProcessorIF {
             return new OrderResDto(orderReqDto.getTransponderID(), orderReqDto.getOrderId(),true, true);
         }
         TransponderInfo tInfo = translate2Transponder(orderReqDto);
-        transponderRepository.save(tInfo);
+        transponderRepository.saveAndFlush(tInfo);
         // only false & false will trigger a new registration
         Management2PaymentDto management2PaymentDto = translate2PaymentDto(orderReqDto);
         paymentIF.sendToPayment(management2PaymentDto);
@@ -81,12 +79,12 @@ public class TransponderService implements OrderProcessorIF {
         }
 
         if(orderReqDto.getTimeStamp() < transponderRepository.getExpireTimeByMacId(orderReqDto.getMacID())){
+            // if transponder not expired
             transponderRepository.updateTransponderRegisterTime(orderReqDto.getMacID());
         }else {
             transponderRepository.updateTransponderRegisterTimeEx(orderReqDto.getMacID(), orderReqDto.getTimeStamp());
         }
         transponderRepository.updateTransponderOrderId(orderReqDto.getMacID(), orderReqDto.getOrderId());
-        //TODO: add current time to handle a situation where trans expired
         Management2PaymentDto management2PaymentDto = translate2PaymentDto(orderReqDto);
         paymentIF.sendToPayment(management2PaymentDto);
         return new OrderResDto(orderReqDto.getTransponderID(), orderReqDto.getOrderId(), false, true);
@@ -105,18 +103,17 @@ public class TransponderService implements OrderProcessorIF {
         }
     }
 
-
     @Override
     @Transactional
     public void processPayment(Payment2ManagementDto payment2ManagementDto) {
         TransponderInfo tInfo = transponderRepository.findByMacID(payment2ManagementDto.getMacID());
         if(tInfo != null){
             if(payment2ManagementDto.getPaymentStatus() == PaymentStatus.Success){
-                TransponderType transponderType = tInfo.getTransponderType();
-                Long expireTime = tInfo.getRegisterTime() + transponderType.getNumberOfMonths() * 2678400L;
-                // TODO: improve time calculation
+                Long expireTime = tInfo.getRegisterTime() + tInfo.getTransponderType() * 2678400L;
                 log.info("retrieve transponder {}, modify the expired time to {}", tInfo.getMacID(), expireTime);
                 transponderRepository.updateTransponderExpiryTime(tInfo.getMacID(), expireTime);
+                management2avlIF.send2val(new AvailabilityResp(
+                        transponderRepository.countTransponderExpireTime(System.currentTimeMillis())));
                 Management2MacDto management2MacDto = translate2MacDto(tInfo);
                 management2MacSystemIF.updateTransponder(management2MacDto);
             }else{
@@ -160,7 +157,7 @@ public class TransponderService implements OrderProcessorIF {
                 .macID(orderReqDto.getMacID())
                 .orderID(orderReqDto.getOrderId())
                 .transponderID(orderReqDto.getTransponderID())
-                .transponderType(orderReqDto.getTransponderType())
+                .transponderType(orderReqDto.getTransponderType().getNumberOfMonths())
                 .licensePlate(orderReqDto.getLicensePlate())
                 .registerTime(orderReqDto.getTimeStamp())
                 .expireTime(-1L)
@@ -171,7 +168,7 @@ public class TransponderService implements OrderProcessorIF {
         management2PaymentDto.setMacID(orderReqDto.getMacID());
         management2PaymentDto.setTimestamp(orderReqDto.getTimeStamp());
         management2PaymentDto.setPaymentMethod(orderReqDto.getPaymentMethod());
-        management2PaymentDto.setBill(10000); //TODO: build a hash for price
+        management2PaymentDto.setBill(orderReqDto.getTransponderType().getPrice());
         return management2PaymentDto;
     }
     private Management2MacDto translate2MacDto(TransponderInfo tInfo){

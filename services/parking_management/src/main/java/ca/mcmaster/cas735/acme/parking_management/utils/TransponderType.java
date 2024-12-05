@@ -1,26 +1,28 @@
 package ca.mcmaster.cas735.acme.parking_management.utils;
 
 public enum TransponderType {
-    RENEW1(1, "Month"), //renew can be done no matter transponder expired or not
-    RENEW2(2, "Month"),
-    RENEW3(3, "Month"),
-    RENEW4(1, "Term"),
-    RENEW5(2, "Term"),
-    RENEW6(1, "Year"),
-    Register1(1, "Month"),
-    Register2(2, "Month"),
-    Register3(3, "Month"),
-    Register4(1, "Term"),
-    Register5(2, "Term"),
-    Register6(1, "Year");
+    RENEW1(1, 50), //renew can be done no matter transponder expired or not
+    RENEW2(2, 100),
+    RENEW3(3, 120),
+    RENEW4(4, 160 ),
+    RENEW5(5, 200),
+    RENEW6(6, 240),
+    RENEW12(12, 360),
+    REGI1(1, 50), //renew can be done no matter transponder expired or not
+    REGI2(2, 100),
+    REGI3(3, 120),
+    REGI4(4, 160 ),
+    REGI5(5, 200),
+    REGI6(6, 240),
+    REGI12(12, 360);
 
 
     private final int numberOfMonths;
-    private final String timeSpan;
+    private final int price;
     //constructor
-    TransponderType(int numberOfMonths, String timeSpan) {
+    TransponderType(int numberOfMonths, int price) {
         this.numberOfMonths = numberOfMonths;
-        this.timeSpan = timeSpan;
+        this.price = price;
     }
 
     //Getter
@@ -28,5 +30,5 @@ public enum TransponderType {
         return numberOfMonths;
     }
 
-    public String getTimeSpan() {return timeSpan;}
+    public int getPrice() {return price;}
 }

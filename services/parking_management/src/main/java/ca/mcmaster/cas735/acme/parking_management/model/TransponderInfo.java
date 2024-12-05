@@ -21,7 +21,7 @@ public class TransponderInfo{
     private String transponderID; //can be used for deduplicate key
     @Column(name = "orderID", nullable = false)
     private String orderID;
-    private TransponderType transponderType;
+    private Integer transponderType;
     private String licensePlate;
     private Long registerTime;
     private Long expireTime;

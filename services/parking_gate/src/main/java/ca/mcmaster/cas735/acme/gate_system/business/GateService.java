@@ -179,7 +179,7 @@ public class GateService {
             GateSystemInfo gateSystemInfo = gateSystemRepository.findByQRCode(QRCode);
             log.info("find gate info {}", gateSystemInfo);
             if (gateSystemInfo != null && gateSystemInfo.getIsVisitor()
-                    && gateSystemInfo.getCharge() == 0 ) { //TODO: add fine decision making
+                    && gateSystemInfo.getCharge() == 0 ) {
                 removeTransponder(gateSystemInfo.getLicensePlate());
                 senderGateSystem.sendAvailabilities(Gate2AvailabilityResDto.builder()
                         .isEnter(false)
@@ -261,15 +261,16 @@ public class GateService {
     // adding charge fee on bill
     @Transactional
     public void addCharges(Enforcement2GateResDto enforcement2GateResDto){
-        GateSystemInfo gateSystemInfo = gateSystemRepository.findByLicensePlate(enforcement2GateResDto.getLicensePlate());
-        String licensePlate  = gateSystemInfo.getLicensePlate();
+        String licensePlate  = enforcement2GateResDto.getLicensePlate();
         if (gateSystemRepository.findByLicensePlate(licensePlate) == null) {
-            log.error("LicensePlate {} not found", enforcement2GateResDto.getLicensePlate());
+            log.error("LicensePlate {} not found", licensePlate);
             return;
         }
-        gateSystemRepository.updateGateSystemInfo(licensePlate,
-                enforcement2GateResDto.getFineReason(), enforcement2GateResDto.getBill());
-        log.info("Car {} is charged", gateSystemInfo.getLicensePlate());
+        gateSystemRepository.updateGateSystemInfoCharge(
+                 enforcement2GateResDto.getBill(),licensePlate);
+        gateSystemRepository.updateGateSystemInfoReason(licensePlate,
+                enforcement2GateResDto.getFineReason());
+        log.info("Car {} is charged", licensePlate);
     }
 
     private long generateQRCode() {

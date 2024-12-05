@@ -28,6 +28,12 @@ server:
 
 app:
   custom:
+    mqtt:
+      host: localhost
+      port: 1883
+      monitorTopic: monitortopic
+      clientId: availabilityId
+
     messaging:
       inbound-exchange-topic: monitor-req
       inbound-exchange-gate: gate2availability_msg

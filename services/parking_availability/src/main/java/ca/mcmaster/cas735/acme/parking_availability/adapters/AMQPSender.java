@@ -1,7 +1,9 @@
 package ca.mcmaster.cas735.acme.parking_availability.adapters;
 
+
 import ca.mcmaster.cas735.acme.parking_availability.dto.*;
 import ca.mcmaster.cas735.acme.parking_availability.ports.AddSale;
+import ca.mcmaster.cas735.acme.parking_availability.ports.Monitor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.TopicExchange;
@@ -22,6 +24,7 @@ public class AMQPSender implements AddSale {
     @Value("${app.custom.messaging.outbound-exchange-monitor}") private String outboundExchangeMonitor;
     @Value("${app.custom.messaging.outbound-exchange-payment}") private String outboundExchangePayment;
     @Value("${app.custom.messaging.outbound-exchange-management}") private String outboundExchangeManagement;
+    private final Monitor monitor;
 
     public void sendToGate(Avl2GateResponseDTO res) {
         rabbitTemplate.convertAndSend(outboundExchangeGate, "*availability2gate",translate(res));
@@ -58,7 +61,8 @@ public class AMQPSender implements AddSale {
     //send to external system
     public void sendToMonitor(InitializationRequest initializationRequest) {
         log.info("send response {} to {}", initializationRequest,outboundExchangeMonitor);
-        rabbitTemplate.convertAndSend(outboundExchangeMonitor, "*avl2monitor",translate(initializationRequest));
+        String msg = monitor.monitor();
+        rabbitTemplate.convertAndSend(outboundExchangeMonitor, "*avl2monitor",msg);
     }
     @Bean
     public TopicExchange outboundMonitor() {
