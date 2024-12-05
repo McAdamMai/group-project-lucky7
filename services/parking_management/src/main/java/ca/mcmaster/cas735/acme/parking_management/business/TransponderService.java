@@ -109,7 +109,7 @@ public class TransponderService implements OrderProcessorIF {
         TransponderInfo tInfo = transponderRepository.findByMacID(payment2ManagementDto.getMacID());
         if(tInfo != null){
             if(payment2ManagementDto.getPaymentStatus() == PaymentStatus.Success){
-                Long expireTime = tInfo.getRegisterTime() + tInfo.getTransponderType() * 2678400L;
+                Long expireTime = tInfo.getRegisterTime() + tInfo.getTransponderType() * 2678400000L;
                 log.info("retrieve transponder {}, modify the expired time to {}", tInfo.getMacID(), expireTime);
                 transponderRepository.updateTransponderExpiryTime(tInfo.getMacID(), expireTime);
                 management2avlIF.send2val(new AvailabilityResp(
