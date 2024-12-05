@@ -23,11 +23,15 @@ logging.level:
 
 server:
   port: 9083
-  servlet:
-    context-path: /member-service
 
 app:
   custom:
+    mqtt:
+      host: localhost
+      port: 1883
+      monitorTopic: monitortopic
+      clientId: availabilityId
+
     messaging:
       inbound-exchange-topic: monitor-req
       inbound-exchange-gate: gate2availability_msg

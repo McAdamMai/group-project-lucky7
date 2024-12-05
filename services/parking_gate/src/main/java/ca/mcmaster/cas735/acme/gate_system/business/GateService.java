@@ -28,7 +28,7 @@ public class GateService {
     private final GateSystemRepository gateSystemRepository;
     private final GateIF gateIF;
     private final SenderGateSystem senderGateSystem;
-    private final WebClient webClient;
+    private final WebClient.Builder webClientBuilder;
 
     private static final Set<String> exitGates = new HashSet<>(Arrays.asList("EXIT12345", "EXIT54321", "EXIT67890"));
     private static final Set<String> entryGates = new HashSet<>(Arrays.asList("ENTRY12345", "ENTRY54321", "ENTRY67890"));
@@ -61,6 +61,10 @@ public class GateService {
     public void enterExitParkingLotWithTransponder(String licensePlate, String gate) throws JsonProcessingException {
         // This is after being validated
         if (exitGates.contains(gate)) {
+            if(gateSystemRepository.findByLicensePlate(licensePlate) == null){
+                log.info("cannot find the corresponding parking information");
+                return;
+            }
             removeTransponder(licensePlate);
             // update availability of parking spots
             senderGateSystem.sendAvailabilities(Gate2AvailabilityResDto.builder()
@@ -77,24 +81,28 @@ public class GateService {
                 return;
             }
             Long current_time = System.currentTimeMillis();
-            saveTransponder(ParkingInfoRequest.builder()
-                    .licensePlate(licensePlate)
-                    .charge(0)
-                    .entryTime(current_time)
-                    .isVisitor(false)
-                    .build());
-            // update availability of parking spots
-            senderGateSystem.sendAvailabilities(Gate2AvailabilityResDto.builder()
-                    .isEnter(true)
-                    .licensePlate(licensePlate)
-                    .time(current_time)
-                    .gate(gate)
-                    .typeOfClient(TypeOfClient.USERCLIENT).build());
-        } else {
+            if(gateSystemRepository.findByLicensePlate(licensePlate) == null){ // create a new record if it's empty
+                saveTransponder(ParkingInfoRequest.builder()
+                        .licensePlate(licensePlate)
+                        .charge(0)
+                        .entryTime(current_time)
+                        .isVisitor(false)
+                        .build());
+                // update availability of parking spots
+                senderGateSystem.sendAvailabilities(Gate2AvailabilityResDto.builder()
+                        .isEnter(true)
+                        .licensePlate(licensePlate)
+                        .time(current_time)
+                        .gate(gate)
+                        .typeOfClient(TypeOfClient.USERCLIENT).build());
+            }
+            else{
+                log.info("license plate exists, update enter time");
+                gateSystemRepository.updateEntryTimeByLicensePlate(current_time, licensePlate); // if record exists, only modify time
+            }
+        }else {
             log.error("Invalid gate: {}", gate);
         }
-            // Send the transponder
-        // update availability of parking spots
         gateIF.openGate(gate);
     }
 
@@ -111,36 +119,33 @@ public class GateService {
             log.info("This parking lot is full");
             return;
         }
-        long qrCode = generateQRCode();
-        log.info("Generated QR code: {}", qrCode);
-        //modified: two system.currentTimeMills should be aligned
         Long entryTime = System.currentTimeMillis();
-        GateSystemInfo gateSystemInfo = GateSystemInfo.builder()
-                .licensePlate(licensePlate)
-                .charge(0)
-                .QRCode(qrCode)
-                .entryTime(entryTime)
-                .isVisitor(false)
-                .build();
-        gateSystemRepository.save(gateSystemInfo);
-        // update availability of parking spots
-        senderGateSystem.sendAvailabilities(Gate2AvailabilityResDto.builder()
-                .isEnter(true)
-                .licensePlate(licensePlate)
-                .time(entryTime)
-                .gate(gate)
-                .typeOfClient(TypeOfClient.PAYPERHOUR).build());
-        // send the QR code to mqtt service
-        gateIF.generateQRCode(qrCode);
-        gateIF.openGate(gate);
-    }
-
-    public void createSendPaymentRequest(Long QRCode, String gate) {
-        Gate2PaymentReqDto gate2PaymentReqDto = computeParkingPrice(QRCode, gate);
-        log.info("Computed parking price: {}", gate2PaymentReqDto.getBill());
-        if(gate2PaymentReqDto != null){
-            senderGateSystem.sendPaymentRequest(gate2PaymentReqDto);
+        if(gateSystemRepository.findByLicensePlate(licensePlate) == null){
+            long qrCode = generateQRCode();
+            log.info("Generated a new QR code: {}", qrCode);
+            //modified: two system.currentTimeMills should be aligned
+            GateSystemInfo gateSystemInfo = GateSystemInfo.builder()
+                    .licensePlate(licensePlate)
+                    .charge(0)
+                    .QRCode(qrCode)
+                    .entryTime(entryTime)
+                    .isVisitor(false)
+                    .build();
+            gateSystemRepository.save(gateSystemInfo);
+            // update availability of parking spots
+            senderGateSystem.sendAvailabilities(Gate2AvailabilityResDto.builder()
+                    .isEnter(true)
+                    .licensePlate(licensePlate)
+                    .time(entryTime)
+                    .gate(gate)
+                    .typeOfClient(TypeOfClient.PAYPERHOUR).build());
+            gateIF.generateQRCode(qrCode);// send the QR code to mqtt service
         }
+        else{
+            log.info("license plate exists, update enter time");
+            gateSystemRepository.updateEntryTimeByLicensePlate(entryTime, licensePlate);
+        }
+        gateIF.openGate(gate);
     }
 
     // Assigned by officer
@@ -174,7 +179,7 @@ public class GateService {
             GateSystemInfo gateSystemInfo = gateSystemRepository.findByQRCode(QRCode);
             log.info("find gate info {}", gateSystemInfo);
             if (gateSystemInfo != null && gateSystemInfo.getIsVisitor()
-                    && gateSystemInfo.getCharge() == 0 ) { //TODO: add fine decision making
+                    && gateSystemInfo.getCharge() == 0 ) {
                 removeTransponder(gateSystemInfo.getLicensePlate());
                 senderGateSystem.sendAvailabilities(Gate2AvailabilityResDto.builder()
                         .isEnter(false)
@@ -185,11 +190,20 @@ public class GateService {
                 gateIF.openGate(gate);
             }
             else if(gateSystemInfo != null){
+                log.info("Pending payment");
                 createSendPaymentRequest(QRCode, gate); // non visitor?
             }
             else{
                 log.info("cannot find the corresponding parking information");
             }
+        }
+    }
+
+    public void createSendPaymentRequest(Long QRCode, String gate) {
+        Gate2PaymentReqDto gate2PaymentReqDto = computeParkingPrice(QRCode, gate);
+        log.info("Computed parking price: {}", gate2PaymentReqDto.getBill());
+        if(gate2PaymentReqDto != null){
+            senderGateSystem.sendPaymentRequest(gate2PaymentReqDto);
         }
     }
 
@@ -199,21 +213,31 @@ public class GateService {
             log.error("QRCode {} not found", QRCode);
             return null;
         }
+        if (gateSystemInfo.getIsVisitor()) {
+            double totalCharge = gateSystemInfo.getCharge().doubleValue();
+            log.info("A fine charge for car {} is {}", gateSystemInfo.getLicensePlate(), totalCharge);
+            return Gate2PaymentReqDto.builder()
+                    .licensePlate(gateSystemInfo.getLicensePlate())
+                    .bill((int) totalCharge)
+                    .gateID(gate)
+                    .timeStamp((Long) System.currentTimeMillis())
+                    .build();
+        }
+        else{
+            double hourlyRate = getHourlyRate(gateSystemInfo.getEntryTime());
+            long hoursStayed = calculateHoursStayed(gateSystemInfo.getEntryTime());
+            log.info("hourly rate {} + hours stayed {}", hourlyRate, hoursStayed);
+            double totalCharge = hourlyRate * hoursStayed + gateSystemInfo.getCharge().doubleValue();
+            // Send the total charge to the payment system
+            log.info("Total charge for car {} is {}", gateSystemInfo.getLicensePlate(), totalCharge);
+            return Gate2PaymentReqDto.builder()
+                    .licensePlate(gateSystemInfo.getLicensePlate())
+                    .bill((int) totalCharge)
+                    .gateID(gate)
+                    .timeStamp((Long) System.currentTimeMillis())
+                    .build();
+        }
         // Assuming you have a method to get the hourly rate based on the day
-        double hourlyRate = getHourlyRate(gateSystemInfo.getEntryTime());
-        long hoursStayed = calculateHoursStayed(gateSystemInfo.getEntryTime());
-        log.info("hourly rate {} + hours stayed {}", hourlyRate, hoursStayed);
-
-        double totalCharge = hourlyRate * hoursStayed + gateSystemInfo.getCharge().doubleValue();
-        // Send the total charge to the payment system
-        log.info("Total charge for car {} is {}", gateSystemInfo.getLicensePlate(), totalCharge);
-
-        return Gate2PaymentReqDto.builder()
-                .licensePlate(gateSystemInfo.getLicensePlate())
-                .bill((int) totalCharge)
-                .gateID(gate)
-                .timeStamp((Long) System.currentTimeMillis())
-                .build();
     }
 
     public void exitingCar(Payment2GateResDto payment2GateResDto) {
@@ -237,15 +261,16 @@ public class GateService {
     // adding charge fee on bill
     @Transactional
     public void addCharges(Enforcement2GateResDto enforcement2GateResDto){
-        GateSystemInfo gateSystemInfo = gateSystemRepository.findByLicensePlate(enforcement2GateResDto.getLicensePlate());
-        String licensePlate  = gateSystemInfo.getLicensePlate();
+        String licensePlate  = enforcement2GateResDto.getLicensePlate();
         if (gateSystemRepository.findByLicensePlate(licensePlate) == null) {
-            log.error("LicensePlate {} not found", enforcement2GateResDto.getLicensePlate());
+            log.error("LicensePlate {} not found", licensePlate);
             return;
         }
-        gateSystemRepository.updateGateSystemInfo(licensePlate,
-                enforcement2GateResDto.getFineReason(), enforcement2GateResDto.getBill());
-        log.info("Car {} is charged", gateSystemInfo.getLicensePlate());
+        gateSystemRepository.updateGateSystemInfoCharge(
+                 enforcement2GateResDto.getBill(),licensePlate);
+        gateSystemRepository.updateGateSystemInfoReason(licensePlate,
+                enforcement2GateResDto.getFineReason());
+        log.info("Car {} is charged", licensePlate);
     }
 
     private long generateQRCode() {
@@ -293,8 +318,8 @@ public class GateService {
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonObj = objectMapper.writeValueAsString(gateCheckSpaceDto);
         try {
-            return webClient.post()
-                    .uri("http://localhost:9083/member-service/availability/check")
+            return webClientBuilder.build().post()
+                    .uri("http://parking-availability/availability/check")
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(jsonObj)
                     .retrieve()

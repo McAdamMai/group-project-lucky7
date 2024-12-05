@@ -2,6 +2,7 @@ package ca.mcmaster.cas735.acme.parking_payment.business;
 
 import ca.mcmaster.cas735.acme.parking_payment.dto.*;
 import ca.mcmaster.cas735.acme.parking_payment.model.PaymentInfo;
+import ca.mcmaster.cas735.acme.parking_payment.ports.Payment2Avl;
 import ca.mcmaster.cas735.acme.parking_payment.ports.PaymentConfirmation2GateMsgBusIF;
 import ca.mcmaster.cas735.acme.parking_payment.ports.PaymentConfirmation2ManagementIF;
 import ca.mcmaster.cas735.acme.parking_payment.ports.PaymentRequest2BankIF;
@@ -27,6 +28,7 @@ public class    PaymentInfoProcessor implements ProcessPaymentInfo {
     private final PaymentInfoRepository paymentInfoRepository;
     private final PaymentConfirmation2GateMsgBusIF paymentConfirmation2GateMsgBusIF;
     private final PaymentConfirmation2ManagementIF paymentConfirmation2ManagementIF;
+    private final Payment2Avl payment2Avl;
 
     //send to bank, store in db, response to gate
     @Override
@@ -65,6 +67,12 @@ public class    PaymentInfoProcessor implements ProcessPaymentInfo {
     public void processConfirmationFromBank(Bank2PaymentDto bank2PaymentDto){
         int status = bank2PaymentDto.getAck()? PaymentStatus.Success : PaymentStatus.Failed;
         paymentInfoRepository.updatePaymentStatus(bank2PaymentDto.getPaymentID(), status);
+        if(bank2PaymentDto.getAck()){
+            payment2Avl.send2avl(new Payment2AvailDTO(paymentInfoRepository.countTransponderSales(),
+                    paymentInfoRepository.SumSales(),
+                    paymentInfoRepository.SumTransponderSales(),
+                    paymentInfoRepository.SumParkingSales()));
+        }
         PaymentInfo paymentInfo = paymentInfoRepository.findByPaymentId(bank2PaymentDto.getPaymentID());
         if(paymentInfo!=null){
             if(Objects.equals(paymentInfo.getProductName(), ProductName.Parking)){

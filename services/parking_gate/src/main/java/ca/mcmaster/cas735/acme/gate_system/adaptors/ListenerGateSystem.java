@@ -235,5 +235,4 @@ public class ListenerGateSystem {
         System.out.println(message);
         log.info("receive message from gate_req.queue, {}", message);
     }
-
 }

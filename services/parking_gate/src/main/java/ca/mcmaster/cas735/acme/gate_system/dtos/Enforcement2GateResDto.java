@@ -15,3 +15,5 @@ public class Enforcement2GateResDto {
     private Long timeStamp;
     private String fineReason;
 }
+
+//{"licensePlate": "ABCDE", "bill": 1500, "timeStamp":1733281303520, "fineReason": "UGLY"}

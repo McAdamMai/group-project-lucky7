@@ -1,4 +1,4 @@
-FROM amazoncorretto:21-alpine
+FROM amazoncorrett  o:21-alpine
 
 ARG JAR_FILE=target/*.jar
 

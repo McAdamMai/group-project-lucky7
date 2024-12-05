@@ -23,5 +23,6 @@ public class LogInfo{
     private String typeOfClient;
     private Long enterTime;
     private Long exitTime;
+    private Integer hour;
     private boolean isEnter;
 }
