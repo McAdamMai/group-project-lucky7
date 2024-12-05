@@ -1,18 +1,183 @@
-
 include:
   # Loading the technical infrastructure
   - ./../infrastructure/docker-compose.yml
 
 services:
 
-  parking-receiver:
-    container_name: parking-receiver
+  # Parking Availability Service
+
+  parking_availability:
+    container_name: parking-availability
     build:
-      context: ../services/parking-receiver
+      context: ../services/parking_availability
     ports:
-      - "9080:9080"
+      - "9083:9083"
+    environment:
+      - SPRING_RABBITMQ_HOST=rabbitmq
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:mysql://parking-availability-db:3306/parking-availability
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=mzh1501130304
     depends_on:
       rabbitmq:
         condition: service_healthy
-      service-registry:
+      parking-availability-db:
         condition: service_healthy
+    healthcheck:
+      test: curl -f http://localhost:9083/actuator/health
+      interval: 10s
+      retries: 5
+
+  # Parking Enforcement Service
+  parking_enforcement:
+    container_name: parking-enforcement
+    build:
+      context: ../services/parking_enforcement
+    ports:
+      - "9082:9082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_RABBITMQ_HOST=rabbitmq
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: curl -f http://localhost:9082/actuator/health
+      interval: 10s
+      retries: 5
+
+  # Parking Gate Service
+  parking_gate:
+    container_name: parking-gate
+    build:
+      context: ../services/parking_gate
+    ports:
+      - "9081:9081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:mysql://parking-gate-db:3306/parking-gate
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=mzh1501130304
+      - SPRING_RABBITMQ_HOST=rabbitmq
+    depends_on:
+      parking-gate-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: curl -f http://localhost:9081/actuator/health
+      interval: 10s
+      retries: 5
+
+  # Parking Management Service
+  parking_management:
+    container_name: parking-management
+    build:
+      context: ../services/parking_management
+    ports:
+      - "9080:9080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:mysql://parking-management-db:3306/parking-transponder
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=mzh1501130304
+      - SPRING_RABBITMQ_HOST=rabbitmq
+    depends_on:
+      parking-management-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: curl -f http://localhost:9080/actuator/health
+      interval: 10s
+      retries: 5
+
+  # Parking Payment Service
+  parking_payment:
+    container_name: parking-payment
+    build:
+      context: ../services/parking_payment
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SPRING_DATASOURCE_URL=jdbc:mysql://payment-service-db:3306/payment_service
+      - SPRING_DATASOURCE_USERNAME=root
+      - SPRING_DATASOURCE_PASSWORD=mzh1501130304
+      - SPRING_RABBITMQ_HOST=rabbitmq
+    depends_on:
+      payment-service-db:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    healthcheck:
+      test: curl -f http://localhost:8081/actuator/health
+      interval: 10s
+      retries: 5
+
+  # Databases
+  parking-availability-db:
+    image: mysql:8
+    container_name: parking-availability-db
+    environment:
+      - MYSQL_ROOT_PASSWORD=mzh1501130304
+      - MYSQL_DATABASE=parking-availability
+    ports:
+      - "3306:3306"
+    volumes:
+      - parking-availability-db-data:/var/lib/mysql
+    healthcheck:
+      test: mysqladmin ping -h localhost -u root --password=mzh1501130304
+      interval: 10s
+      retries: 5
+
+  parking-gate-db:
+    image: mysql:8
+    container_name: parking-gate-db
+    environment:
+      - MYSQL_ROOT_PASSWORD=mzh1501130304
+      - MYSQL_DATABASE=parking-gate
+    ports:
+      - "3307:3306"
+    volumes:
+      - parking-gate-db-data:/var/lib/mysql
+    healthcheck:
+      test: mysqladmin ping -h localhost -u root --password=mzh1501130304
+      interval: 10s
+      retries: 5
+
+  parking-management-db:
+    image: mysql:8
+    container_name: parking-management-db
+    environment:
+      - MYSQL_ROOT_PASSWORD=mzh1501130304
+      - MYSQL_DATABASE=parking-transponder
+    ports:
+      - "3308:3306"
+    volumes:
+      - parking-management-db-data:/var/lib/mysql
+    healthcheck:
+      test: mysqladmin ping -h localhost -u root --password=mzh1501130304
+      interval: 10s
+      retries: 5
+
+  payment-service-db:
+    image: mysql:8
+    container_name: payment-service-db
+    environment:
+      - MYSQL_ROOT_PASSWORD=mzh1501130304
+      - MYSQL_DATABASE=payment_service
+    ports:
+      - "3309:3306"
+    volumes:
+      - payment-service-db-data:/var/lib/mysql
+    healthcheck:
+      test: mysqladmin ping -h localhost -u root --password=mzh1501130304
+      interval: 10s
+      retries: 5
+
+volumes:
+  parking-availability-db-data:
+  parking-gate-db-data:
+  parking-management-db-data:
+  payment-service-db-data:
