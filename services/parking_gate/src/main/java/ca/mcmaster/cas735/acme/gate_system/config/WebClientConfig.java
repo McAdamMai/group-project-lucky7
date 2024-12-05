@@ -1,5 +1,6 @@
 package ca.mcmaster.cas735.acme.gate_system.config;
 
+import org.springframework.cloud.client.loadbalancer.LoadBalanced;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
@@ -13,7 +14,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 public class WebClientConfig {
 
     @Bean
-    public WebClient webClient(){
+    @LoadBalanced
+    public WebClient.Builder webClientBuilder(){
         return WebClient.builder()
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
                 .exchangeStrategies(ExchangeStrategies.builder()
@@ -21,7 +23,6 @@ public class WebClientConfig {
                             configurer.defaultCodecs().jackson2JsonDecoder(new Jackson2JsonDecoder());
                             configurer.defaultCodecs().jackson2JsonEncoder(new Jackson2JsonEncoder());
                         })
-                        .build())
-                .build(); // in this case, it simply builds a default web client instance;
+                        .build()); // in this case, it simply builds a default web client instance;
     }
 }

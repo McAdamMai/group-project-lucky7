@@ -23,8 +23,6 @@ logging.level:
 
 server:
   port: 9083
-  servlet:
-    context-path: /member-service
 
 app:
   custom:

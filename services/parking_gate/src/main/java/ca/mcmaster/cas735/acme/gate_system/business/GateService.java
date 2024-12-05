@@ -28,7 +28,7 @@ public class GateService {
     private final GateSystemRepository gateSystemRepository;
     private final GateIF gateIF;
     private final SenderGateSystem senderGateSystem;
-    private final WebClient webClient;
+    private final WebClient.Builder webClientBuilder;
 
     private static final Set<String> exitGates = new HashSet<>(Arrays.asList("EXIT12345", "EXIT54321", "EXIT67890"));
     private static final Set<String> entryGates = new HashSet<>(Arrays.asList("ENTRY12345", "ENTRY54321", "ENTRY67890"));
@@ -318,8 +318,8 @@ public class GateService {
         ObjectMapper objectMapper = new ObjectMapper();
         String jsonObj = objectMapper.writeValueAsString(gateCheckSpaceDto);
         try {
-            return webClient.post()
-                    .uri("http://localhost:9083/member-service/availability/check")
+            return webClientBuilder.build().post()
+                    .uri("http://parking-availability/availability/check")
                     .contentType(MediaType.APPLICATION_JSON)
                     .bodyValue(jsonObj)
                     .retrieve()
