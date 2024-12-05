@@ -7,7 +7,7 @@ spring:
     password: cas735
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/parking-availability
+    url: jdbc:mysql://parking-availability-db:3306/parking-availability
     username: root
     password: mzh1501130304
   jpa:
