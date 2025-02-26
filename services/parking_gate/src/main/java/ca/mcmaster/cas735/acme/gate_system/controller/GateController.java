@@ -20,7 +20,7 @@ public class GateController {
     public ResponseEntity<String> visitorPass(@RequestBody String licensePlate) {
         try{
             Long visitorPass = gateService.createVisitorPass(licensePlate);
-            return ResponseEntity.status(HttpStatus.CREATED).body("Visitor pass created: " + visitorPass);
+            return ResponseEntity.status(HttpStatus.CREATED).body(visitorPass.toString());
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Payment failed: " + e.getMessage());
         }

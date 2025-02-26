@@ -4,15 +4,21 @@ spring:
     password: cas735
     host: localhost
     port: 5672
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://payment-service-db:3306/payment_service
+    url: jdbc:mysql://localhost:3306/parking-payment
     username: root
     password: mzh1501130304
 
   application:
-    name: parking_payment
+    name: parking-payment
 
 logging.level:
   ca.mcmaster.cas735.lucky7.parking.payment:

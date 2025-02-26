@@ -41,7 +41,7 @@ public class PaymentListener {
         // making sure messages from different exchanges will trigger different functions
         Bank2PaymentDto bank2PaymentDto = translate(message, Bank2PaymentDto.class);
         log.info("Received response from bank: {}", bank2PaymentDto);
-        processPaymentInfo.processConfirmationFromBank(bank2PaymentDto);
+            processPaymentInfo.processConfirmationFromBank(bank2PaymentDto);
     }
 
     //listener for the gate-------------------

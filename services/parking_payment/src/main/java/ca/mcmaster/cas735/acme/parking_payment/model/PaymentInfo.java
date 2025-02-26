@@ -6,7 +6,7 @@ import jakarta.persistence.Table;
 import lombok.*;
 
 @Entity
-@Table(name = "t_payment_info")
+@Table(name = "t_payment")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -17,8 +17,8 @@ public class PaymentInfo {
     private String paymentId;
     private Integer productName;
     private Integer bill;
-    private String ProductId;
+    private String productId;
     private Integer paymentStatus;
-    private String GateId;
+    private String gateId;
 
 }

@@ -17,7 +17,7 @@ public class PaymentConfig {
 
     @PostConstruct
     void init() {
-        payment2AvlIF.send2avl(new Payment2AvailDTO(paymentInfoRepository.countTransponderSales(),
+       payment2AvlIF.send2avl(new Payment2AvailDTO(paymentInfoRepository.countTransponderSales(),
                 paymentInfoRepository.SumSales(),
                 paymentInfoRepository.SumTransponderSales(),
                 paymentInfoRepository.SumParkingSales()));

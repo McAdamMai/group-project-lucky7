@@ -5,6 +5,7 @@ spring:
   rabbitmq:
     username: admin
     password: cas735
+
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://parking-availability-db:3306/parking-availability
