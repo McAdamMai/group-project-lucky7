@@ -4,6 +4,14 @@
 spring:
   rabbitmq:
     host: rabbitmq
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://host.docker.internal:3306/parking-transponder/?useSSL=false&serverTimezone=UTC
+    username: root
+    password: mzh1501130304
+  jpa:
+    hibernate:
+      ddl-auto: update
 
 app:
   custom:

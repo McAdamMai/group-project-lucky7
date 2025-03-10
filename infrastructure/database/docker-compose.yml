@@ -1,0 +1,13 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-container
+    environment:
+      MYSQL_ROOT_PASSWORD: mzh1501130304  # Root password
+      MYSQL_DATABASE: parking_database  # Optional: Create a database automatically
+    ports:
+      - "3306:3306"  # Map port 3306 from container to host
+    volumes:
+      - ./data:/var/lib/mysql  # Persist MySQL data on the host
+      - ./sql-scripts:/docker-entrypoint-initdb.d  # Execute SQL scripts at container startup
+    restart: always  # Restart the container automatically if it stops

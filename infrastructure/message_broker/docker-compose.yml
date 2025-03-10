@@ -4,14 +4,14 @@
 services:
 
   rabbitmq:
-    image: rabbitmq:3-management-alpine
+    image: rabbitmq:latest
     container_name: rabbitmq
     restart: unless-stopped
     ports:
       - "1883:1883"
       - "5672:5672"
       - "8080:15672"
-    command: "/bin/bash -c \"rabbitmq-plugins enable --offline rabbitmq_mqtt; rabbitmq-server\""
+    command: "/bin/bash -c \"rabbitmq-plugins enable --offline rabbitmq_mqtt rabbitmq_management; rabbitmq-server\""
     env_file:
       - ./_login.env
     volumes:

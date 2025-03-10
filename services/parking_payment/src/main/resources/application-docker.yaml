@@ -2,8 +2,13 @@
 # to start in local mode with maven: -Dspring-boot.run.profiles=docker
 
 spring:
+  profiles:
+    active: docker
   rabbitmq:
     host: rabbitmq
+  jpa:
+    hibernate:
+      ddl-auto: update
 
 app:
   custom:

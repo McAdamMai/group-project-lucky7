@@ -4,18 +4,14 @@ spring:
     password: cas735
     host: localhost
     port: 5672
-  jpa:
-    hibernate:
-      ddl-auto: update
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
-
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3306/parking-payment
     username: root
     password: mzh1501130304
+  jpa:
+    hibernate:
+      ddl-auto: update
 
   application:
     name: parking-payment
@@ -24,6 +20,11 @@ logging.level:
   ca.mcmaster.cas735.lucky7.parking.payment:
     adapter:  INFO # DEBUG for fine-grained trace
     business: INFO
+    com.zaxxer.hikari: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.springframework: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE  # 绑定参数详情
+    com.mysql.cj: DEBUG
 
 server:
   port: 8081

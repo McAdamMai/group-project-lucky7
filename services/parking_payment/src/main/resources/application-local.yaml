@@ -1,4 +1,4 @@
-# Overriding configuration when started in local mode
+  # Overriding configuration when started in local mode
 # to start in local mode with maven: -Dspring-boot.run.profiles=local
 
 spring:

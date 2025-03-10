@@ -1,13 +1,9 @@
-include:
-  # Loading the message broker standalone deployment 
-  - ./message_broker/docker-compose.yml
-
 services:
-
   service-registry:
-    container_name: service-registry
-    build:
-      context: ./service_registry
+    build: ./service_registry
+    container_name: registry-container
+    networks:
+      - shared-network
     ports:
       - "8761:8761"
     healthcheck:
@@ -16,3 +12,46 @@ services:
       interval: 1s
       timeout: 1s
       retries: 10
+
+  rabbitmq:
+    image: rabbitmq:latest
+    restart: unless-stopped
+    networks:
+      - shared-network
+    ports:
+      - "1883:1883"
+      - "5672:5672"
+      - "8080:15672"
+    command: "/bin/bash -c \"rabbitmq-plugins enable --offline rabbitmq_mqtt rabbitmq_management; rabbitmq-server\""
+    env_file:
+      - ./message_broker/_login.env
+    volumes:
+      - type: bind
+        source: ./message_broker/_rabbitmq.conf
+        target: /etc/rabbitmq/rabbitmq.conf
+        read_only: true
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      start_period: 5s
+      interval: 1s
+      timeout: 1s
+      retries: 10
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-container
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: mydatabase
+    networks:
+      - shared-network
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./database/data:/var/lib/mysql
+      - ./database/sql-scripts:/docker-entrypoint-initdb.d
+    restart: unless-stopped
+
+networks:
+  shared-network:
+    driver: bridge
